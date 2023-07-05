@@ -5,6 +5,16 @@ module.exports = {
     tsconfigRootDir: __dirname,
     sourceType: 'module',
   },
+  overrides: [
+    {
+      files: ['**/*.ts'],
+      parserOptions: {
+        project: ['./tsconfig.json'],
+      },
+      // remove o arquivo migrate.config.ts da lista de arquivos incluídos
+      exclude: ['src/database/migrations/migrate.config.ts'],
+    },
+  ],
   plugins: ['@typescript-eslint/eslint-plugin'],
   extends: [
     'plugin:@typescript-eslint/recommended',
