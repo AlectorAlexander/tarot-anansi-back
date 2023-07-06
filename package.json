@@ -20,8 +20,9 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "migrate": "migrate-mongo up",
     "migrate:rollback": "migrate-mongo down",
-    "create-migrate": "node create-migration.js"
-  },  
+    "create-migrate": "node create-migration.js",
+    "create-modules": "node create-modules.js"
+  },
   "dependencies": {
     "@nestjs/common": "^9.0.0",
     "@nestjs/core": "^9.0.0",
@@ -37,7 +38,8 @@
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.2.0",
     "typeorm": "^0.3.17",
-    "typeorm-extension": "^2.8.1"
+    "typeorm-extension": "^2.8.1",
+    "zod": "^3.21.4"
   },
   "devDependencies": {
     "@nestjs/cli": "^9.0.0",
