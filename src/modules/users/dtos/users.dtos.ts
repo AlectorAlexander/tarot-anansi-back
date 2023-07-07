@@ -13,4 +13,4 @@ export const userValidationSchema = z.object({
   date_update: z.date().optional(),
 });
 
-export type userType = z.infer<typeof userValidationSchema>;
+export type IUser = z.infer<typeof userValidationSchema>;
