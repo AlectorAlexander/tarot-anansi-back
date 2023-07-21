@@ -34,10 +34,12 @@ export const UserSchema = new Schema<IUser & Document>({
     },
     date_creation: {
         type: Date,
+        default: Date.now,
         required: true,
     },
     date_update: {
         type: Date,
+        default: Date.now,
         required: false,
     }
 })

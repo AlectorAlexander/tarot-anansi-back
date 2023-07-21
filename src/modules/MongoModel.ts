@@ -7,8 +7,9 @@ abstract class MongoModel<T extends Document> implements IModel<T> {
   constructor(model: Model<T>) {
     this.model = model;
   }
+  
+  async create(obj: Partial<T>): Promise<T> {
 
-  async create(obj: T): Promise<T> {
     const createdObj = await this.model.create(obj);
     return createdObj;
   }
@@ -23,6 +24,11 @@ abstract class MongoModel<T extends Document> implements IModel<T> {
       throw new Error('Invalid _id format.');
     }
     const obj = await this.model.findById(_id);
+    return obj;
+  }
+
+  async readOneByEmail(email: string): Promise<T | null> {
+    const obj = await this.model.findOne({ email });
     return obj;
   }
 

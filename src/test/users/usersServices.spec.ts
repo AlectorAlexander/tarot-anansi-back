@@ -41,7 +41,7 @@ describe('UsersService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    usersService = new UsersService(userModelMock);
+    usersService = new UsersService();
   });
 
   describe('create', () => {

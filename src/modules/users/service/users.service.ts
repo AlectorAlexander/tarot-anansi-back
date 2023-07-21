@@ -1,9 +1,9 @@
-import { IModel } from './../../interfaces/IModel';
 import { IService } from "src/modules/interfaces/IService";
 import { sign, SignOptions, verify } from 'jsonwebtoken';
 import { IUser, userValidationSchema } from "../dtos/users.dtos";
-import bcrypt from 'bcrypt';
+import { hash, compare } from 'bcrypt';
 import 'dotenv/config';
+import UserModel from '../entities/users.entity';
 
 enum ErrorTypes {
     EntityNotFound = 'EntityNotFound',
@@ -19,38 +19,42 @@ const jwtConfig: SignOptions = {
 };
 
 class UsersService implements IService<IUser> {
-    private _user: IModel<IUser>;
+    private _user: UserModel;
 
-    constructor(model: IModel<IUser>) {
-        this._user = model;
+    constructor() {
+        this._user = new UserModel();
     }
 
 
     public async create(data: IUser): Promise<String> {
+      try {
         const parsed = userValidationSchema.safeParse(data);
-      
+        
         if (!parsed.success) {
-          throw parsed;
+          throw new Error('Erro na validação do usuário.');
         }
       
         const { password } = data;
         const saltRounds = 10;
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        const hashedPassword: string = await hash(password, saltRounds);
         const user = await this._user.create({ ...parsed.data, password: hashedPassword });
         
         return sign({ id: user._id }, JWT_SECRET, jwtConfig);
+      } catch (error) {
+        throw new Error('Erro ao criar o usuário. Detalhes do erro: ' + error.message);
+      }
     }
       
       
     
     public async readOne(email: string, password: string): Promise<IUser> {
-      const user = await this._user.readOne(email);
+      const user = await this._user.readOneByEmail(email);
     
       if (!user) {
         throw new Error(ErrorTypes.EntityNotFound);
       }
     
-      const isMatch = await bcrypt.compare(password, user.password);
+      const isMatch = await compare(password, user.password);
     
       if (!isMatch) {
         throw new Error(ErrorTypes.InvalidCredentials);

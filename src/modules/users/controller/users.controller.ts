@@ -1,55 +1,69 @@
-import { Controller, Post, Get, Put, Delete, Param, Body, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Get, Put, Delete, Param, Body, BadRequestException, NotFoundException } from '@nestjs/common';
 import { IUser } from '../dtos/users.dtos';
 import UsersService from '../service/users.service';
 
 @Controller('users')
 export class UsersController {
-    constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService) {}
 
-    @Post()
-    async Register(@Body() userData: IUser): Promise<String> {
-        try {
-            return await this.usersService.create(userData);
-        } catch (error) {
-            throw new BadRequestException(error);
-        }
-    }
-
-    @Post('login')
-        async login(@Body() loginData: { email: string, password: string }): Promise<IUser> {
+  @Post()
+  async register(@Body() userData: IUser): Promise<String> {
     try {
-        const { email, password } = loginData;
-        return await this.usersService.readOne(email, password);
+      
+      const createdUserId = await this.usersService.create(userData);
+      return createdUserId;
     } catch (error) {
-        throw new BadRequestException(error.message);
+      throw new BadRequestException({ message: error.message });
     }
-}
+  }
 
-
-    @Get()
-    async read(): Promise<IUser[]> {
-        try {
-            return await this.usersService.read();
-        } catch (error) {
-            throw new BadRequestException(error);
-        }
+  @Post('login')
+  async login(@Body() loginData: { email: string; password: string }): Promise<IUser> {
+    try {
+      const { email, password } = loginData;
+      const user = await this.usersService.readOne(email, password);
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+      return user;
+    } catch (error) {
+      throw new BadRequestException({ message: error.message });
     }
+  }
 
-    @Put(':id')
-    async update(@Param('id') id: string, @Body() userUpdates: IUser | object): Promise<IUser> {
-        try {
-            return await this.usersService.update(id, userUpdates);
-        } catch (error) {
-            throw new BadRequestException(error);
-        }
+  @Get()
+  async read(): Promise<IUser[]> {
+    try {
+      const users = await this.usersService.read();
+      return users;
+    } catch (error) {
+      throw new BadRequestException({ message: error.message });
     }
+  }
 
-    @Delete(':id')
-    async delete(@Param('id') id: string): Promise<IUser> {
-        try {
-            return await this.usersService.delete(id);
-        } catch (error) {
-            throw new BadRequestException(error);
-        }
+  @Put(':id')
+  async update(@Param('id') id: string, @Body() userUpdates: IUser | object): Promise<IUser> {
+    try {
+      const updatedUser = await this.usersService.update(id, userUpdates);
+      if (!updatedUser) {
+        throw new NotFoundException('User not found');
+      }
+      return updatedUser;
+    } catch (error) {
+      throw new BadRequestException({ message: error.message });
     }
+  }
+
+  @Delete(':id')
+  async delete(@Param('id') id: string): Promise<IUser> {
+    try {
+      const deletedUser = await this.usersService.delete(id);
+      if (!deletedUser) {
+        throw new NotFoundException('User not found');
+      }
+      return deletedUser;
+    } catch (error) {
+      throw new BadRequestException({ message: error.message });
+    }
+  }
 }
