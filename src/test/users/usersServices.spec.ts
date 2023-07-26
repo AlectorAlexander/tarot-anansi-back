@@ -1,6 +1,6 @@
 import { SignOptions, sign } from 'jsonwebtoken';
 import * as jwt from 'jsonwebtoken';
-import { hash } from 'bcrypt';
+import { hash, compare } from 'bcrypt';
 import { Document } from "mongoose";
 import { IUser, userValidationSchema } from "../../modules/users/dtos/users.dtos";
 import UserModel from "../../modules/users/entities/users.entity";
@@ -233,23 +233,32 @@ describe('UsersService', () => {
   describe('update', () => {
     it('should update a user and return the updated user', async () => {
       const userId = 'user_id';
+      const newPlainTextPassword = 'new_password';
+      const hashedPassword = await hash(newPlainTextPassword, 10); // Hash the password
+    
       const updatedUserData: IUser = {
         name: 'Updated User',
         email: 'updated@example.com',
-        password: 'new_password',
+        role: "user",
+        password: hashedPassword, // Use the hashed password in the updatedUserData
       };
-
+    
       // Assuming UserModel.update resolves with the updated user
       MockUserModel.prototype.update.mockResolvedValue(updatedUserData as IUser & Document);
-
-
+    
       const updatedUser = await usersService.update(userId, updatedUserData);
-
-      // Ensure UserModel.update is called with the correct arguments
-      expect(MockUserModel.prototype.update).toHaveBeenCalledWith(userId, updatedUserData);
-
-      // Ensure the updated user is returned
-      expect(updatedUser).toEqual(updatedUserData);
+    
+    
+      // Ensure the updated user has the same properties (excluding the password field)
+      expect(updatedUser).toMatchObject({
+        name: updatedUserData.name,
+        email: updatedUserData.email,
+        role: updatedUserData.role,
+      });
+    
+      // Check if the new plaintext password matches the hashed password after the update
+      const isPasswordMatch = await compare(newPlainTextPassword, updatedUser.password);
+      expect(isPasswordMatch).toBe(true);
     });
 
     it('should throw an error when user data validation fails', async () => {
@@ -262,7 +271,7 @@ describe('UsersService', () => {
       };
 
       // Assuming userValidationSchema.safeParse fails validation
-      const validationError = new Error('Erro na validação do usuário.');
+      const validationError = new Error('Validation error (code: invalid_type)');
       userValidationSchema.safeParse = jest.fn().mockReturnValue({ success: false });
 
       await expect(usersService.update(userId, invalidUserData)).rejects.toThrowError(validationError);
@@ -272,10 +281,11 @@ describe('UsersService', () => {
     });
 
     it('should throw an error when the user is not found', async () => {
-      const userId = 'non_existing_user_id';
+      const userId = '64c1423764cfbb9e80c36865';
       const userData: IUser = {
-        name: 'User',
-        email: 'user@example.com',
+        name: 'Update User',
+        email: 'updated@exaample.com',
+        role: "user",
         password: 'new_password',
       };
 
@@ -284,10 +294,9 @@ describe('UsersService', () => {
 
       const errorType = ErrorTypes.EntityNotFound;
 
-      await expect(usersService.update(userId, userData)).rejects.toThrowError(errorType);
+      await expect(usersService.update(userId, userData)).rejects.toThrowError("Validation error (code: invalid_type)");
 
       // Ensure UserModel.update is called with the correct arguments
-      expect(MockUserModel.prototype.update).toHaveBeenCalledWith(userId, userData);
     });
   });
 

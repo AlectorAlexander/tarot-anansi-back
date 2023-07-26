@@ -95,6 +95,7 @@ class UsersService implements IService<IUser> {
 
       public async update(id: string, obj: IUser | object): Promise<IUser> {
         const parsed = userValidationSchema.safeParse(obj);
+        
         if (!parsed.success) {
           const errorDetails = parsed as SafeParseError<IUser>; // Type assertion
           const errorMessage = errorDetails?.error?.errors?.[0]?.message || 'Validation error';
