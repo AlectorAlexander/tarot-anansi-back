@@ -1,7 +1,7 @@
-// main.module.ts
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from './users/users.module';
+import { LoggerMiddleware } from './users/service/jwt-middleware-consume';
 
 @Module({
   imports: [
@@ -14,9 +14,13 @@ import { UsersModule } from './users/users.module';
         return connection;
       }
     }),
-    
-    
     UsersModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(LoggerMiddleware)
+      .forRoutes({ path: '*', method: RequestMethod.ALL });
+  }
+}

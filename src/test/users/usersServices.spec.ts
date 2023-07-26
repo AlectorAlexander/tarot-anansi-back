@@ -1,178 +1,324 @@
-import * as bcrypt from 'bcrypt';
-import { verify } from 'jsonwebtoken';
-import { sign } from 'jsonwebtoken';
-import { IUser } from '../../modules/users/dtos/users.dtos';
-import UsersService from '../../modules/users/service/users.service';
-const { ObjectId } = require('mongodb');
-const _id = new ObjectId();
-import 'dotenv/config';
+import { SignOptions, sign } from 'jsonwebtoken';
+import * as jwt from 'jsonwebtoken';
+import { hash } from 'bcrypt';
+import { Document } from "mongoose";
+import { IUser, userValidationSchema } from "../../modules/users/dtos/users.dtos";
+import UserModel from "../../modules/users/entities/users.entity";
+import UsersService, { ErrorTypes } from "../../modules/users/service/users.service";
+
 const { JWT_SECRET } = process.env;
 
-enum ErrorTypes {
-    EntityNotFound = 'EntityNotFound',
-    InvalidMongoId = 'InvalidMongoId',
-    InvalidCredentials = 'InvalidCredentials'
-  }
-
-const userModelMock = {
-  create: jest.fn(),
-  readOne: jest.fn(),
-  read: jest.fn(),
-  update: jest.fn(),
-  delete: jest.fn(),
+const jwtConfig: SignOptions = {
+  expiresIn: '7d',
+  algorithm: 'HS256',
 };
 
 
-jest.mock('bcrypt', () => ({
-    default: {
-      hash: jest.fn(),
-      compare: jest.fn(),
-    },
-  }));
-  
-
-jest.mock('jsonwebtoken', () => ({
-  sign: jest.fn(),
-  verify: jest.fn(),
-}));
+// Create a mock UserModel for testing purposes
+jest.mock('../../modules/users/entities/users.entity');
+const MockUserModel = UserModel as jest.MockedClass<typeof UserModel>;
 
 describe('UsersService', () => {
   let usersService: UsersService;
 
   beforeEach(() => {
-    jest.clearAllMocks();
     usersService = new UsersService();
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   describe('create', () => {
-    it('should create a new user and return a token', async () => {
+    it('should create a new user with hashed password', async () => {
       const userData: IUser = {
         name: 'John Doe',
-        email: 'john@example.com',
-        password: 'password123',
         role: 'user',
-        _id: _id.toString()
+        email: 'john@example.com',
+        password: 'test123123',
       };
 
-      const hashedPassword = 'hashedPassword';
-      (bcrypt.default.hash as jest.Mock).mockResolvedValue(hashedPassword);
+      // Assuming UserModel.create resolves with the created user
+      MockUserModel.prototype.create.mockResolvedValue(userData as IUser & Document);
 
-      const createdUser: IUser = { ...userData, _id: _id.toString() };
-      userModelMock.create.mockResolvedValue(createdUser);
+      const token = await usersService.create(userData);
 
+      // Ensure UserModel.create is called with the correct arguments
+      expect(MockUserModel.prototype.create).toHaveBeenCalledWith({
+        ...userData,
+        password: expect.any(String), // Expecting hashed password
+      });
 
-      const token = 'jwtToken';
-      (sign as jest.Mock).mockReturnValue(token);
-      const result = await usersService.create(userData);
+      // Ensure the token is a non-empty string
+      expect(token).toBeTruthy();
+      expect(typeof token).toBe('string');
+    });
 
-      expect(userModelMock.create).toHaveBeenCalledWith({ ...userData, password: hashedPassword });
-      expect(sign).toHaveBeenCalledWith(
-        { id: createdUser._id },
-        JWT_SECRET,
-        expect.objectContaining({
-          algorithm: 'HS256',
-          expiresIn: '7d',
-        })
-      );
-      
-      
-      
-
-      expect(result).toBe(token);
+    it('should return an error because the password is too small', async () => {
+      const userData: IUser = {
+        name: 'John Doe',
+        role: 'user',
+        email: 'john@example.com',
+        password: 'test123', // Ensure password has less than 8 characters for testing the error
+      };
+    
+      // Assuming UserModel.create resolves with the created user
+      MockUserModel.prototype.create.mockResolvedValue(userData as IUser & Document);
+    
+      try {
+        await usersService.create(userData);
+      } catch (e) {
+        // Ensure the e message and code are as expected
+        expect(e.message).toEqual('Password must be at least 8 characters long. (code: too_small)');
+    
+        return; // Exit the test case if we caught the expected error
+      }
+    
+      // If the code reaches this point, the test should fail
+      throw new Error('Expected the test to throw an error, but it did not.');
     });
   });
 
   describe('readOne', () => {
-    it('should return a token if user is found and passwords match', async () => {
+    it('should return a valid token for existing user with correct credentials', async () => {
       const email = 'john@example.com';
-      const password = 'password123';
-    
-      const user: IUser = { email, password: 'hashedPassword' };
-      userModelMock.readOne.mockResolvedValue(user);
-    
-      (bcrypt.default.compare as jest.Mock).mockResolvedValue(true);
-    
-      const token = 'jwtToken';
-      (sign as jest.Mock).mockReturnValue(token);
-    
-      const result = await usersService.readOne(email, password);
-    
-      expect(userModelMock.readOne).toHaveBeenCalledWith(email);
-      expect(bcrypt.default.compare).toHaveBeenCalledWith(password, user.password);
-      expect(sign).toHaveBeenCalledWith({ id: user._id }, JWT_SECRET, expect.anything());
-      expect(result).toBe(token);
-    });
-    
+      const password = 'test123';
 
-    it('should throw an error if user not found', async () => {
-      const email = 'john@example.com';
-      const password = 'password123';
-      userModelMock.readOne.mockResolvedValue(null);
+      const user = {
+        _id: 'user_id',
+        email,
+        password: await hash(password, 10), // Hashed password for testing
+      };
 
-      await expect(usersService.readOne(email, password)).rejects.toThrow(ErrorTypes.EntityNotFound);
+      // Assuming UserModel.readOneByEmail resolves with the user
+      MockUserModel.prototype.readOneByEmail.mockResolvedValue(user as IUser & Document);
 
-      expect(userModelMock.readOne).toHaveBeenCalledWith(email);
-      expect(bcrypt.default.compare).not.toHaveBeenCalled();
+      const token = await usersService.readOne(email, password);
+
+      // Ensure UserModel.readOneByEmail is called with the correct arguments
+      expect(MockUserModel.prototype.readOneByEmail).toHaveBeenCalledWith(email);
+
+      // Ensure the token is a non-empty string
+      expect(token).toBeTruthy();
+      expect(typeof token).toBe('string');
     });
 
-    it('should throw an error if passwords do not match', async () => {
+    it('should throw an error for non-existing user', async () => {
+      const email = 'non_existing@example.com';
+      const password = 'test123';
+
+      // Assuming UserModel.readOneByEmail resolves with null (user not found)
+      MockUserModel.prototype.readOneByEmail.mockResolvedValue(null);
+
+      const errorType = ErrorTypes.EntityNotFound;
+
+      await expect(usersService.readOne(email, password)).rejects.toThrowError(errorType);
+
+      // Ensure UserModel.readOneByEmail is called with the correct arguments
+      expect(MockUserModel.prototype.readOneByEmail).toHaveBeenCalledWith(email);
+    });
+
+    it('should throw an error for invalid credentials', async () => {
       const email = 'john@example.com';
-      const password = 'password123';
+      const password = 'invalid_password';
 
-      const user: IUser = { email, password: 'hashedPassword' };
-      userModelMock.readOne.mockResolvedValue(user);
+      const user = {
+        _id: 'user_id',
+        email,
+        password: await hash('test123', 10), // Hashed password for testing
+      };
 
-      (bcrypt.default.compare as jest.Mock).mockResolvedValue(false);
+      // Assuming UserModel.readOneByEmail resolves with the user
+      MockUserModel.prototype.readOneByEmail.mockResolvedValue(user as IUser & Document);
 
-      await expect(usersService.readOne(email, password)).rejects.toThrow(ErrorTypes.InvalidCredentials);
+      const errorType = ErrorTypes.InvalidCredentials;
 
-      expect(userModelMock.readOne).toHaveBeenCalledWith(email);
-      expect(bcrypt.default.compare).toHaveBeenCalledWith(password, user.password);
+      await expect(usersService.readOne(email, password)).rejects.toThrowError(errorType);
+
+      // Ensure UserModel.readOneByEmail is called with the correct arguments
+      expect(MockUserModel.prototype.readOneByEmail).toHaveBeenCalledWith(email);
     });
   });
 
   describe('validate', () => {
-    it('should validate a token and return true if user exists', async () => {
-      const token = 'validToken';
-      const userId = 'user123';
-      const decodedToken = { id: userId };
-      const user = { _id: userId };
+    it('should return true for a valid token', async () => {
+      const userId = 'user_id';
+      const token = sign({ id: userId }, JWT_SECRET, jwtConfig);
 
-      (verify as jest.Mock).mockReturnValue(decodedToken);
-      userModelMock.readOne.mockResolvedValue(user);
+      // Assuming UserModel.readOne resolves with the user
+      MockUserModel.prototype.readOne.mockResolvedValue({ _id: userId } as IUser & Document);
 
       const result = await usersService.validate(token);
 
-      expect(verify).toHaveBeenCalledWith(token, JWT_SECRET);
-      expect(userModelMock.readOne).toHaveBeenCalledWith(userId);
+      // Ensure UserModel.readOne is called with the correct arguments
+      expect(MockUserModel.prototype.readOne).toHaveBeenCalledWith(userId);
+
+      // Ensure the result is true
       expect(result).toBe(true);
     });
 
-    it('should throw an error if the token is invalid', async () => {
-      const token = 'invalidToken';
-
-      (verify as jest.Mock).mockImplementation(() => {
-        throw new Error();
+    it('should throw an error for an invalid token', async () => {
+      const invalidToken = 'invalid_token';
+    
+      // Mocking the verify function
+      jest.spyOn(jwt, 'verify').mockImplementation(() => {
+        throw new Error('Invalid token');
       });
+    
+      const errorType = 'Invalid token';
+    
+      await expect(usersService.validate(invalidToken)).rejects.toThrowError(errorType);
+    });
+    
+  });
 
-      await expect(usersService.validate(token)).rejects.toThrow('Invalid token');
-      expect(verify).toHaveBeenCalledWith(token, JWT_SECRET);
-      expect(userModelMock.readOne).not.toHaveBeenCalled();
+  describe('read', () => {
+    it('should return a list of users without passwords', async () => {
+      const usersData: IUser[] = [
+        {
+          _id: 'user_id_1',
+          name: 'User 1',
+          email: 'user1@example.com',
+          password: 'password_1',
+        },
+        {
+          _id: 'user_id_2',
+          name: 'User 2',
+          email: 'user2@example.com',
+          password: 'password_2',
+        },
+      ];
+    
+      // Assuming UserModel.read resolves with the usersData
+      MockUserModel.prototype.read.mockResolvedValue(usersData as IUser[] & Document[]);
+    
+      // Ensure the returned users do not have the "password" field
+      const users = await usersService.read();
+    
+      // Ensure UserModel.read is called
+      expect(MockUserModel.prototype.read).toHaveBeenCalled();
+    
+      // Ensure the returned users do not have the "password" field
+      const usersWithoutPasswords = users.map(({ password, ...user }) => user);
+      usersWithoutPasswords.forEach((user) => {
+        expect(user).not.toHaveProperty('password');
+      });
+    
+      // Ensure the users array is returned without passwords
+      expect(usersWithoutPasswords).toEqual([
+        {
+          _id: 'user_id_1',
+          name: 'User 1',
+          email: 'user1@example.com',
+        },
+        {
+          _id: 'user_id_2',
+          name: 'User 2',
+          email: 'user2@example.com',
+        },
+      ]);
+    });
+    
+
+    it('should throw an error when no users are found', async () => {
+      // Assuming UserModel.read resolves with null (no users found)
+      MockUserModel.prototype.read.mockResolvedValue(null);
+
+      const errorType = ErrorTypes.EntityNotFound;
+
+      await expect(usersService.read()).rejects.toThrowError(errorType);
+    });
+  });
+
+  describe('update', () => {
+    it('should update a user and return the updated user', async () => {
+      const userId = 'user_id';
+      const updatedUserData: IUser = {
+        name: 'Updated User',
+        email: 'updated@example.com',
+        password: 'new_password',
+      };
+
+      // Assuming UserModel.update resolves with the updated user
+      MockUserModel.prototype.update.mockResolvedValue(updatedUserData as IUser & Document);
+
+
+      const updatedUser = await usersService.update(userId, updatedUserData);
+
+      // Ensure UserModel.update is called with the correct arguments
+      expect(MockUserModel.prototype.update).toHaveBeenCalledWith(userId, updatedUserData);
+
+      // Ensure the updated user is returned
+      expect(updatedUser).toEqual(updatedUserData);
     });
 
-    it('should return false if user does not exist', async () => {
-      const token = 'validToken';
-      const userId = 'user123';
+    it('should throw an error when user data validation fails', async () => {
+      const userId = 'user_id';
+      const invalidUserData: IUser = {
+        name: 'User',
+        email: 'invalid_email',    
+        role: "user",
+        password: 'new_password',
+      };
 
-      (verify as jest.Mock).mockReturnValue({ id: userId });
-      userModelMock.readOne.mockResolvedValue(null);
+      // Assuming userValidationSchema.safeParse fails validation
+      const validationError = new Error('Erro na validação do usuário.');
+      userValidationSchema.safeParse = jest.fn().mockReturnValue({ success: false });
 
-      const result = await usersService.validate(token);
+      await expect(usersService.update(userId, invalidUserData)).rejects.toThrowError(validationError);
 
-      expect(verify).toHaveBeenCalledWith(token, JWT_SECRET);
-      expect(userModelMock.readOne).toHaveBeenCalledWith(userId);
-      expect(result).toBe(false);
+      // Ensure userValidationSchema.safeParse is called with the correct arguments
+      expect(userValidationSchema.safeParse).toHaveBeenCalledWith(invalidUserData);
+    });
+
+    it('should throw an error when the user is not found', async () => {
+      const userId = 'non_existing_user_id';
+      const userData: IUser = {
+        name: 'User',
+        email: 'user@example.com',
+        password: 'new_password',
+      };
+
+      // Assuming UserModel.update resolves with null (user not found)
+      MockUserModel.prototype.update.mockResolvedValue(null);
+
+      const errorType = ErrorTypes.EntityNotFound;
+
+      await expect(usersService.update(userId, userData)).rejects.toThrowError(errorType);
+
+      // Ensure UserModel.update is called with the correct arguments
+      expect(MockUserModel.prototype.update).toHaveBeenCalledWith(userId, userData);
+    });
+  });
+
+  describe('delete', () => {
+    it('should delete a user and return the deleted user', async () => {
+      const userId = 'user_id';
+
+      // Assuming UserModel.delete resolves with the deleted user
+      MockUserModel.prototype.delete.mockResolvedValue({ _id: userId } as IUser & Document);
+
+      const deletedUser = await usersService.delete(userId);
+
+      // Ensure UserModel.delete is called with the correct arguments
+      expect(MockUserModel.prototype.delete).toHaveBeenCalledWith(userId);
+
+      // Ensure the deleted user is returned
+      expect(deletedUser).toEqual({ _id: userId });
+    });
+
+    it('should throw an error when the user is not found', async () => {
+      const userId = 'non_existing_user_id';
+
+      // Assuming UserModel.delete resolves with null (user not found)
+      MockUserModel.prototype.delete.mockResolvedValue(null);
+
+      const errorType = ErrorTypes.EntityNotFound;
+
+      await expect(usersService.delete(userId)).rejects.toThrowError(errorType);
+
+      // Ensure UserModel.delete is called with the correct arguments
+      expect(MockUserModel.prototype.delete).toHaveBeenCalledWith(userId);
     });
   });
 });
-

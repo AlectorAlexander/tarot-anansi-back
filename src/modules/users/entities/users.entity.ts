@@ -1,5 +1,5 @@
 import { model as mongooseCreateModel, Document, Schema} from 'mongoose';
-import MongoModel from 'src/modules/MongoModel';
+import MongoModel from '../../../modules/MongoModel';
 import { IUser } from '../dtos/users.dtos';
 
 

@@ -1,6 +1,8 @@
-import { Controller, Post, Get, Put, Delete, Param, Body, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Controller, Post, Get, Put, Delete, Param, Body, BadRequestException, NotFoundException, UseGuards, Request } from '@nestjs/common';
 import { IUser } from '../dtos/users.dtos';
 import UsersService from '../service/users.service';
+import { JwtAuthGuard } from '../service/jwt-auth.guard';
+
 
 @Controller('users')
 export class UsersController {
@@ -18,7 +20,7 @@ export class UsersController {
   }
 
   @Post('login')
-  async login(@Body() loginData: { email: string; password: string }): Promise<IUser> {
+  async login(@Body() loginData: { email: string; password: string }): Promise<String> {
     try {
       const { email, password } = loginData;
       const user = await this.usersService.readOne(email, password);
@@ -41,18 +43,24 @@ export class UsersController {
     }
   }
 
-  @Put(':id')
-  async update(@Param('id') id: string, @Body() userUpdates: IUser | object): Promise<IUser> {
-    try {
-      const updatedUser = await this.usersService.update(id, userUpdates);
-      if (!updatedUser) {
-        throw new NotFoundException('User not found');
-      }
-      return updatedUser;
-    } catch (error) {
-      throw new BadRequestException({ message: error.message });
+  @Put()
+  @UseGuards(JwtAuthGuard)
+  async update(@Request() req: any, @Body() userUpdates: IUser | object): Promise<IUser> {
+    console.log('chamei')
+  try {
+    const userId = req.user.id;
+    const updatedUser = await this.usersService.update(userId, userUpdates);
+    if (!updatedUser) {
+      throw new NotFoundException('User not found');
     }
+    return updatedUser;
+  } catch (error) {
+    throw new BadRequestException({ message: error.message });
   }
+}
+
+  
+
 
   @Delete(':id')
   async delete(@Param('id') id: string): Promise<IUser> {
