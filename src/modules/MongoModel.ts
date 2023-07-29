@@ -1,4 +1,4 @@
-import { Model, Document, isValidObjectId } from 'mongoose';
+import { Model, Document, isValidObjectId, FilterQuery } from 'mongoose';
 import { IModel } from './interfaces/IModel';
 
 abstract class MongoModel<T extends Document> implements IModel<T> {
@@ -14,10 +14,19 @@ abstract class MongoModel<T extends Document> implements IModel<T> {
     return createdObj;
   }
 
-  async read(): Promise<T[]> {
-    const objs = await this.model.find();
-    return objs;
-  }
+  public async read(filter?: FilterQuery<T>): Promise<T[]> {
+    try {
+        let objs: T[];
+        if (filter) {
+            objs = await this.model.find(filter);
+        } else {
+            objs = await this.model.find();
+        }
+        return objs;
+    } catch (error) {
+        throw error;
+    }
+}
 
   async readOne(_id: string): Promise<T | null> {
     if (!isValidObjectId(_id)) {

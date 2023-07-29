@@ -42,7 +42,7 @@ class UsersService implements IService<IUser> {
       const hashedPassword: string = await hash(password, saltRounds);
       const user = await this._user.create({ ...parsed.data, password: hashedPassword });
       
-      return sign({ id: user._id }, JWT_SECRET, jwtConfig);
+      return sign({ id: user._id, role: user.role }, JWT_SECRET, jwtConfig);
     }
     
 

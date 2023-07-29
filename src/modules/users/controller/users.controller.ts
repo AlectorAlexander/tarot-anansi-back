@@ -46,7 +46,6 @@ export class UsersController {
   @Put()
   @UseGuards(JwtAuthGuard)
   async update(@Request() req: any, @Body() userUpdates: IUser | object): Promise<IUser> {
-    console.log('chamei')
   try {
     const userId = req.user.id;
     const updatedUser = await this.usersService.update(userId, userUpdates);
