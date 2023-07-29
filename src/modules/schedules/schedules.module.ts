@@ -1,4 +1,3 @@
-
 import { Module } from '@nestjs/common';
 import { SchedulesController } from './controller/schedules.controller';
 import SchedulesService from './service/schedules.service';
