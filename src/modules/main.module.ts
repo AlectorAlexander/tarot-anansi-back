@@ -1,4 +1,9 @@
-import { Module, NestModule, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
+import {
+  Module,
+  NestModule,
+  MiddlewareConsumer,
+  RequestMethod,
+} from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from './users/users.module';
 import { LoggerMiddleware } from './users/service/jwt-middleware-consume';
@@ -7,6 +12,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './users/service/jwt.strategy';
 import { JwtAuthGuard } from './users/service/jwt-auth.guard';
 import { SchedulesModule } from './schedules/schedules.module';
+import { NotificationsModule } from './notifications/notifications.module';
 const { JWT_SECRET } = process.env;
 
 @Module({
@@ -14,7 +20,7 @@ const { JWT_SECRET } = process.env;
     PassportModule,
     JwtModule.register({
       secret: JWT_SECRET,
-      signOptions: { expiresIn: '1h' }
+      signOptions: { expiresIn: '1h' },
     }),
     MongooseModule.forRoot(process.env.MONGO_DB_URL, {
       autoCreate: true,
@@ -23,13 +29,13 @@ const { JWT_SECRET } = process.env;
           console.log('Database connection established!');
         });
         return connection;
-      }
+      },
     }),
     UsersModule,
-    SchedulesModule
+    SchedulesModule,
+    NotificationsModule,
   ],
-  providers: [JwtStrategy, JwtAuthGuard]
-
+  providers: [JwtStrategy, JwtAuthGuard],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

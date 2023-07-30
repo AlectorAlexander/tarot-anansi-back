@@ -31,7 +31,7 @@ class NotificationService implements IService<INotifications> {
       throw new Error(`${errorMessage} (code: ${codeMessage})`);
     }
     const notification = await this._notifications.create(data);
-    return notification.toObject();
+    return notification;
   }
 
   public async create(data: INotifications): Promise<INotifications> {
@@ -44,8 +44,7 @@ class NotificationService implements IService<INotifications> {
 
   public async delete(id: string): Promise<INotifications> {
     try {
-      const notification = await this._notifications.delete(id);
-      return notification.toObject();
+      return await this._notifications.delete(id);
     } catch (error) {
       throw error;
     }
@@ -55,7 +54,7 @@ class NotificationService implements IService<INotifications> {
     try {
       const notificationsFromDB = await this._notifications.read();
       const notifications = notificationsFromDB.map((notification) => ({
-        ...notification.toObject(),
+        ...notification,
       }));
 
       notifications.sort(this.sortByDateCreation);
@@ -68,10 +67,7 @@ class NotificationService implements IService<INotifications> {
 
   public async readOne(id: string): Promise<INotifications> {
     try {
-      const notificationFromDB = await this._notifications.readOne(id);
-      const notification = {
-        ...notificationFromDB.toObject(),
-      };
+      const notification = await this._notifications.readOne(id);
       return notification;
     } catch (error) {
       throw error;
@@ -84,7 +80,7 @@ class NotificationService implements IService<INotifications> {
         user_id: userId,
       });
       const notifications = notificationsFromDB.map((notification) => ({
-        ...notification.toObject(),
+        ...notification,
       }));
 
       notifications.sort(this.sortByDateCreation);
@@ -99,8 +95,17 @@ class NotificationService implements IService<INotifications> {
     id: string,
     data: INotifications,
   ): Promise<INotifications> {
+    const parsed = notificationsValidationSchema.safeParse(data);
+    if (!parsed.success) {
+      const errorDetails = parsed as SafeParseError<INotifications>;
+      const firstError = errorDetails.error?.errors[0];
+      const errorMessage = firstError?.message || 'Validation error';
+      const codeMessage = firstError?.code || 'invalid_type';
+      throw new Error(`${errorMessage} (code: ${codeMessage})`);
+    }
     try {
-      return this.validateDataAndCreate(data);
+      const updatedNotification = await this._notifications.update(id, data);
+      return updatedNotification;
     } catch (error) {
       throw error;
     }
