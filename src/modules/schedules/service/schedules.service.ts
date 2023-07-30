@@ -60,6 +60,7 @@ class SchedulesService implements IService<ISchedules> {
       throw new Error(`${errorMessage} (code: ${codeMessage})`);
     }
     const schedule = await this._schedule.create(data);
+    await this.generateNotification(schedule);
     return schedule;
   }
 
@@ -128,8 +129,11 @@ class SchedulesService implements IService<ISchedules> {
     data: ISchedules,
   ): Promise<ISchedules | null> {
     try {
-      const parsed = schedulesValidationSchema.safeParse(data);
+      schedulesValidationSchema.safeParse(data);
       const updatedSchedule = await this._schedule.update(id, data);
+      if (updatedSchedule) {
+        await this.generateNotification(updatedSchedule);
+      }
       return updatedSchedule || null;
     } catch (error) {
       throw error;
