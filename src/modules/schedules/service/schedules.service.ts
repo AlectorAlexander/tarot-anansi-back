@@ -5,12 +5,49 @@ import {
   schedulesValidationSchema,
 } from './../dtos/schedules.dtos';
 import { IService } from '../../interfaces/IService';
+import NotificationService from 'src/modules/notifications/service/notifications.service';
 
 class SchedulesService implements IService<ISchedules> {
   private _schedule: SchedulesModel;
 
-  constructor() {
+  constructor(private readonly notificationService: NotificationService) {
     this._schedule = new SchedulesModel();
+  }
+
+  private async generateNotification(data: ISchedules): Promise<void> {
+    const { user_id, start_date, status } = data;
+    const start_date_formatted = new Date(start_date).toLocaleDateString(
+      'pt-BR',
+      {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      },
+    );
+
+    const start_time_formatted = new Date(start_date).toLocaleTimeString(
+      'pt-BR',
+      {
+        hour: '2-digit',
+        minute: '2-digit',
+      },
+    );
+
+    let message = '';
+    if (status === 'confirmado') {
+      message = `Seu agendamento foi marcado para o dia ${start_date_formatted} às ${start_time_formatted}`;
+    } else if (status === 'cancelado') {
+      message = `Seu agendamento para o dia ${start_date_formatted} às ${start_time_formatted} foi cancelado`;
+    } else if (status === 'pendente') {
+      message = `O pagamento de sua seção para o dia ${start_date_formatted} às ${start_time_formatted}, ainda consta como pendente. Portanto, o agendamento ainda não está confirmado`;
+    }
+
+    if (message !== '') {
+      await this.notificationService.create({
+        user_id,
+        message,
+      });
+    }
   }
 
   private async validateDataAndCreate(data: ISchedules): Promise<ISchedules> {
