@@ -6,6 +6,7 @@ import {
 } from './../dtos/schedules.dtos';
 import { IService } from '../../interfaces/IService';
 import NotificationService from 'src/modules/notifications/service/notifications.service';
+import { BadRequestException } from '@nestjs/common';
 
 class SchedulesService implements IService<ISchedules> {
   private _schedule: SchedulesModel;
@@ -14,7 +15,7 @@ class SchedulesService implements IService<ISchedules> {
     this._schedule = new SchedulesModel();
   }
 
-  private async generateNotification(data: ISchedules): Promise<void> {
+  private async createAndSendNotification(data: ISchedules): Promise<void> {
     const { user_id, start_date, status } = data;
     const start_date_formatted = new Date(start_date).toLocaleDateString(
       'pt-BR',
@@ -34,7 +35,7 @@ class SchedulesService implements IService<ISchedules> {
     );
 
     let message = '';
-    if (status === 'confirmado') {
+    if (status === 'pago') {
       message = `Seu agendamento foi marcado para o dia ${start_date_formatted} às ${start_time_formatted}`;
     } else if (status === 'cancelado') {
       message = `Seu agendamento para o dia ${start_date_formatted} às ${start_time_formatted} foi cancelado`;
@@ -60,12 +61,39 @@ class SchedulesService implements IService<ISchedules> {
       throw new Error(`${errorMessage} (code: ${codeMessage})`);
     }
     const schedule = await this._schedule.create(data);
-    await this.generateNotification(schedule);
+    await this.createAndSendNotification(schedule);
     return schedule;
   }
 
   public async create(data: ISchedules): Promise<ISchedules> {
     try {
+      if (data.start_date > data.end_date) {
+        throw new BadRequestException({
+          message: 'Start date must be before end date',
+        });
+      }
+      if (data.start_date.getDay() === 6 || data.start_date.getDay() === 0) {
+        throw new BadRequestException({
+          message: 'Start date must be a weekday',
+        });
+      }
+      const schedulesSearch = await this.findByDate(
+        data.start_date,
+        data.end_date,
+      );
+      if (schedulesSearch.length > 0) {
+        throw new BadRequestException({
+          message: 'Schedules already exist for this date',
+        });
+      }
+      const schedulesPendent = await this._schedule.read({
+        status: 'pendente',
+      });
+      if (schedulesPendent && schedulesPendent.length > 0) {
+        throw new BadRequestException({
+          message: 'There are pending schedules',
+        });
+      }
       return this.validateDataAndCreate(data);
     } catch (error) {
       throw error;
@@ -106,6 +134,7 @@ class SchedulesService implements IService<ISchedules> {
           start_date: { $gte: start_date },
           end_date: { $lte: end_date },
         });
+        if (!schedules) return [];
         return schedules.map((schedule) => schedule);
       } else {
         const startOfDay = new Date(start_date);
@@ -132,7 +161,7 @@ class SchedulesService implements IService<ISchedules> {
       schedulesValidationSchema.safeParse(data);
       const updatedSchedule = await this._schedule.update(id, data);
       if (updatedSchedule) {
-        await this.generateNotification(updatedSchedule);
+        await this.createAndSendNotification(updatedSchedule);
       }
       return updatedSchedule || null;
     } catch (error) {

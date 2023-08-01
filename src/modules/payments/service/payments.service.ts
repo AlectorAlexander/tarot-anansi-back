@@ -69,18 +69,13 @@ class PaymentService implements IService<IPayments> {
     }
   }
 
-  public async findByScheduleId(scheduleId: string): Promise<IPayments[]> {
+  public async findByScheduleId(scheduleId: string): Promise<IPayments> {
     try {
-      const paymentsFromDB = await this._payments.read({
+      const payment = await this._payments.read({
         schedule_id: scheduleId,
       });
-      const payments = paymentsFromDB.map((payment) => ({
-        ...payment,
-      }));
 
-      payments.sort(this.sortByDateCreation);
-
-      return payments;
+      return payment[0];
     } catch (error) {
       throw error;
     }

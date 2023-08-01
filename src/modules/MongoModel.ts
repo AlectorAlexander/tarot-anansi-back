@@ -7,26 +7,25 @@ abstract class MongoModel<T extends Document> implements IModel<T> {
   constructor(model: Model<T>) {
     this.model = model;
   }
-  
-  async create(obj: Partial<T>): Promise<T> {
 
+  async create(obj: Partial<T>): Promise<T> {
     const createdObj = await this.model.create(obj);
     return createdObj;
   }
 
   public async read(filter?: FilterQuery<T>): Promise<T[]> {
     try {
-        let objs: T[];
-        if (filter) {
-            objs = await this.model.find(filter);
-        } else {
-            objs = await this.model.find();
-        }
-        return objs;
+      let objs: T[];
+      if (filter) {
+        objs = await this.model.find(filter);
+      } else {
+        objs = await this.model.find();
+      }
+      return objs;
     } catch (error) {
-        throw error;
+      throw error;
     }
-}
+  }
 
   async readOne(_id: string): Promise<T | null> {
     if (!isValidObjectId(_id)) {
@@ -45,7 +44,9 @@ abstract class MongoModel<T extends Document> implements IModel<T> {
     if (!isValidObjectId(_id)) {
       throw new Error('Invalid _id format.');
     }
-    const updatedObj = await this.model.findByIdAndUpdate(_id, obj, { new: true });
+    const updatedObj = await this.model.findByIdAndUpdate(_id, obj, {
+      new: true,
+    });
     return updatedObj;
   }
 

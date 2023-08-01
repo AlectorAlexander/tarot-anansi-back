@@ -11,7 +11,7 @@ export const schedulesValidationSchema = z.object({
     .optional(),
   start_date: z.date().optional(),
   end_date: z.date().optional(),
-  status: z.enum(['pendente', 'confirmado', 'cancelado', 'concluído']),
+  status: z.enum(['pendente', 'pago', 'cancelado', 'reembolsado', 'concluído']),
   date_creation: z.date().optional(),
   date_update: z.date().optional(),
 });

@@ -10,7 +10,7 @@ export const paymentsValidationSchema = z.object({
     .regex(/^[0-9a-fA-F]{24}$/)
     .optional(),
   price: z.number().min(0.01).max(999999.99).optional(),
-  status: z.enum(['pendente', 'pago', 'reembolsado']),
+  status: z.enum(['pendente', 'pago', 'cancelado', 'reembolsado']),
   date_creation: z.date().optional(),
   date_update: z.date().optional(),
 });

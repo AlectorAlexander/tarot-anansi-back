@@ -1,5 +1,4 @@
-
-import { Module } from '@nestjs/common';
+/* import { Module } from '@nestjs/common';
 import { PaymentsController } from './controller/payments.controller';
 import { PaymentsService } from './service/payments.service';
 
@@ -8,3 +7,4 @@ import { PaymentsService } from './service/payments.service';
   providers: [PaymentsService],
 })
 export class PaymentsModule {}
+ */

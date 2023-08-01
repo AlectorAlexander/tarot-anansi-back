@@ -30,25 +30,6 @@ export class SchedulesController {
       data.user_id = userId;
       data.start_date = new Date(data.start_date);
       data.end_date = new Date(data.end_date);
-      if (data.start_date > data.end_date) {
-        throw new BadRequestException({
-          message: 'Start date must be before end date',
-        });
-      }
-      if (data.start_date.getDay() === 6 || data.start_date.getDay() === 0) {
-        throw new BadRequestException({
-          message: 'Start date must be a weekday',
-        });
-      }
-      const schedulesSearch = await this.schedulesService.findByDate(
-        data.start_date,
-        data.end_date,
-      );
-      if (schedulesSearch.length > 0) {
-        throw new BadRequestException({
-          message: 'Schedules already exist for this date',
-        });
-      }
       const schedule = await this.schedulesService.create(data);
       return schedule;
     } catch (error) {

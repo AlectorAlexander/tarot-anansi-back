@@ -56,7 +56,10 @@ describe('SchedulesService', () => {
 
     it('should throw an error when schedule data validation fails', async () => {
       const invalidScheduleData: ISchedules = {
-        // Invalid schedule data for testing the error
+        user_id: 'inválido',
+        status: 'pendente',
+        start_date: new Date('2023-07-01'),
+        end_date: new Date('2023-07-02'),
       };
 
       // Assuming schedulesValidationSchema.safeParse fails validation
