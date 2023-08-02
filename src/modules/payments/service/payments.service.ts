@@ -2,12 +2,31 @@ import { IService } from 'src/modules/interfaces/IService';
 import { SafeParseError } from 'zod';
 import { IPayments, paymentsValidationSchema } from '../dtos/payments.dtos';
 import PaymentsModel from '../entities/payments.entity';
+import NotificationService from 'src/modules/notifications/service/notifications.service';
 
 class PaymentService implements IService<IPayments> {
   private _payments: PaymentsModel;
 
-  constructor() {
+  constructor(private readonly notificationService: NotificationService) {
     this._payments = new PaymentsModel();
+  }
+
+  private async createAndSendNotification(data: IPayments): Promise<void> {
+    const { status, price } = data;
+    let message = '';
+    if (status === 'pago') {
+      message = `Seu pagamento de R$${price} foi efetuado com sucesso`;
+    } else if (status === 'cancelado') {
+      message = `Seu pagamento foi cancelado`;
+    } else if (status === 'pendente') {
+      message = `Seu pagamento ainda não foi confirmado`;
+    }
+
+    if (message !== '') {
+      await this.notificationService.create({
+        message,
+      });
+    }
   }
 
   private sortByDateCreation(a: IPayments, b: IPayments): number {
@@ -81,7 +100,7 @@ class PaymentService implements IService<IPayments> {
     }
   }
 
-  public async update(id: string, data: IPayments): Promise<IPayments> {
+  public async update(_id: string, data: IPayments): Promise<IPayments> {
     const parsed = paymentsValidationSchema.safeParse(data);
     if (!parsed.success) {
       const errorDetails = parsed as SafeParseError<IPayments>;
@@ -91,7 +110,8 @@ class PaymentService implements IService<IPayments> {
       throw new Error(`${errorMessage} (code: ${codeMessage})`);
     }
     try {
-      const updatedPayment = await this._payments.update(id, data);
+      const updatedPayment = await this._payments.update(_id, data);
+      await this.createAndSendNotification(updatedPayment);
       return updatedPayment;
     } catch (error) {
       throw error;

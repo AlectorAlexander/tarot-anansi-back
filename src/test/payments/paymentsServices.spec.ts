@@ -5,18 +5,23 @@ import {
 } from '../../modules/payments/dtos/payments.dtos';
 import PaymentsModel from '../../modules/payments/entities/payments.entity';
 import PaymentService from '../../modules/payments/service/payments.service';
+import NotificationService from '../../modules/notifications/service/notifications.service';
 
 // Create a mock PaymentsModel for testing purposes
 jest.mock('../../modules/payments/entities/payments.entity');
 const MockPaymentsModel = PaymentsModel as jest.MockedClass<
   typeof PaymentsModel
 >;
+jest.mock('../../modules/notifications/service/notifications.service');
+const MockNotificationService = NotificationService as jest.MockedClass<
+  typeof NotificationService
+>;
 
 describe('PaymentService', () => {
   let paymentService: PaymentService;
 
   beforeEach(() => {
-    paymentService = new PaymentService();
+    paymentService = new PaymentService(new MockNotificationService());
   });
 
   afterEach(() => {

@@ -3,7 +3,7 @@ import PaymentService from '../../payments/service/payments.service';
 import SchedulesService from '../../schedules/service/schedules.service';
 import { IPayments } from 'src/modules/payments/dtos/payments.dtos';
 
-type IBookingData = {
+export type IBookingData = {
   scheduleData: ISchedules;
   paymentData: IPayments;
 };
@@ -50,15 +50,17 @@ class BookingService {
   }
 
   async updateBooking(
-    bookingId: string,
+    scheduleId: string,
     data: IBookingData,
   ): Promise<IBookingData> {
     try {
-      const existingBooking = await this.findBookingByScheduleId(bookingId);
+      const existingBooking = await this.findBookingByScheduleId(scheduleId);
+      console.log(existingBooking);
       const updatedSchedule = await this.schedulesService.update(
         existingBooking.scheduleData._id,
         data.scheduleData,
       );
+
       const updatedPayment = await this.paymentService.update(
         existingBooking.paymentData._id,
         data.paymentData,
@@ -80,6 +82,7 @@ class BookingService {
           const payment = await this.paymentService.findByScheduleId(
             schedule._id,
           );
+
           return {
             scheduleData: schedule,
             paymentData: payment,
