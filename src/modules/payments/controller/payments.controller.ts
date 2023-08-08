@@ -1,4 +1,4 @@
-/* import {
+import {
   Controller,
   Get,
   Param,
@@ -16,12 +16,12 @@ import PaymentService from '../service/payments.service';
 import { IPayments } from '../dtos/payments.dtos';
 
 @Controller('payment')
-export class NotificationController {
+export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
   @Get()
   @UseGuards(JwtAuthGuard)
-  async read(@Request() req: any): Promise<IPayments[]> {
+  /* async read(@Request() req: any): Promise<IPayments[]> {
     try {
       const role = req.user.role;
       if (role === 'admin') {
@@ -29,14 +29,13 @@ export class NotificationController {
         return payment;
       } else {
         const userId = req.user.id;
-        const payment = await this.paymentService.findByUserId(userId);
+        const payment = await this.paymentService.findByScheduleId(userId);
         return payment;
       }
     } catch (error) {
       throw new NotFoundException('No payment found');
     }
-  }
-
+  } */
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   async readOne(@Param('id') id: string): Promise<IPayments> {
@@ -91,4 +90,3 @@ export class NotificationController {
     }
   }
 }
- */

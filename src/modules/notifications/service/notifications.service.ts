@@ -5,7 +5,9 @@ import {
 } from '../dtos/notifications.dtos';
 import NotificationModel from '../entities/notifications.entity';
 import { SafeParseError } from 'zod';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 class NotificationService implements IService<INotifications> {
   private _notifications: NotificationModel;
 

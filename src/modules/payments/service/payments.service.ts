@@ -3,7 +3,10 @@ import { SafeParseError } from 'zod';
 import { IPayments, paymentsValidationSchema } from '../dtos/payments.dtos';
 import PaymentsModel from '../entities/payments.entity';
 import NotificationService from 'src/modules/notifications/service/notifications.service';
+import { Injectable } from '@nestjs/common';
+import { ObjectId } from 'mongodb';
 
+@Injectable()
 class PaymentService implements IService<IPayments> {
   private _payments: PaymentsModel;
 
@@ -11,7 +14,10 @@ class PaymentService implements IService<IPayments> {
     this._payments = new PaymentsModel();
   }
 
-  private async createAndSendNotification(data: IPayments): Promise<void> {
+  private async createAndSendNotification(
+    data: IPayments,
+    user_id: string,
+  ): Promise<void> {
     const { status, price } = data;
     let message = '';
     if (status === 'pago') {
@@ -25,6 +31,7 @@ class PaymentService implements IService<IPayments> {
     if (message !== '') {
       await this.notificationService.create({
         message,
+        user_id,
       });
     }
   }
@@ -48,9 +55,13 @@ class PaymentService implements IService<IPayments> {
     return payment;
   }
 
-  public async create(data: IPayments): Promise<IPayments> {
+  public async create(data: IPayments, user_id?: string): Promise<IPayments> {
     try {
-      return this.validateDataAndCreate(data);
+      const payment = await this.validateDataAndCreate(data);
+      if (user_id) {
+        await this.createAndSendNotification(payment, user_id);
+      }
+      return payment;
     } catch (error) {
       throw error;
     }
@@ -100,7 +111,12 @@ class PaymentService implements IService<IPayments> {
     }
   }
 
-  public async update(_id: string, data: IPayments): Promise<IPayments> {
+  public async update(
+    _id: string,
+    data: IPayments,
+    user_id?: string,
+  ): Promise<IPayments> {
+    console.log(data);
     const parsed = paymentsValidationSchema.safeParse(data);
     if (!parsed.success) {
       const errorDetails = parsed as SafeParseError<IPayments>;
@@ -111,7 +127,9 @@ class PaymentService implements IService<IPayments> {
     }
     try {
       const updatedPayment = await this._payments.update(_id, data);
-      await this.createAndSendNotification(updatedPayment);
+      if (user_id) {
+        await this.createAndSendNotification(updatedPayment, user_id);
+      }
       return updatedPayment;
     } catch (error) {
       throw error;

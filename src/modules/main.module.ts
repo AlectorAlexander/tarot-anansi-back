@@ -1,3 +1,4 @@
+import { BookingModule } from './booking/booking.module';
 import {
   Module,
   NestModule,
@@ -34,6 +35,7 @@ const { JWT_SECRET } = process.env;
     UsersModule,
     SchedulesModule,
     NotificationsModule,
+    BookingModule,
   ],
   providers: [JwtStrategy, JwtAuthGuard],
 })

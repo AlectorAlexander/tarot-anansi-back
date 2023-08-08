@@ -1,17 +1,27 @@
-import { Controller, Post, Get, Put, Delete, Param, Body, BadRequestException, NotFoundException, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Put,
+  Delete,
+  Param,
+  Body,
+  BadRequestException,
+  NotFoundException,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { IUser } from '../dtos/users.dtos';
 import UsersService from '../service/users.service';
 import { JwtAuthGuard } from '../service/jwt-auth.guard';
-
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  async register(@Body() userData: IUser): Promise<String> {
+  async register(@Body() userData: IUser): Promise<string> {
     try {
-      
       const createdUserId = await this.usersService.create(userData);
       return createdUserId;
     } catch (error) {
@@ -20,7 +30,9 @@ export class UsersController {
   }
 
   @Post('login')
-  async login(@Body() loginData: { email: string; password: string }): Promise<String> {
+  async login(
+    @Body() loginData: { email: string; password: string },
+  ): Promise<string> {
     try {
       const { email, password } = loginData;
       const user = await this.usersService.readOne(email, password);
@@ -45,21 +57,21 @@ export class UsersController {
 
   @Put()
   @UseGuards(JwtAuthGuard)
-  async update(@Request() req: any, @Body() userUpdates: IUser | object): Promise<IUser> {
-  try {
-    const userId = req.user.id;
-    const updatedUser = await this.usersService.update(userId, userUpdates);
-    if (!updatedUser) {
-      throw new NotFoundException('User not found');
+  async update(
+    @Request() req: any,
+    @Body() userUpdates: IUser | object,
+  ): Promise<IUser> {
+    try {
+      const userId = req.user.id;
+      const updatedUser = await this.usersService.update(userId, userUpdates);
+      if (!updatedUser) {
+        throw new NotFoundException('User not found');
+      }
+      return updatedUser;
+    } catch (error) {
+      throw new BadRequestException({ message: error.message });
     }
-    return updatedUser;
-  } catch (error) {
-    throw new BadRequestException({ message: error.message });
   }
-}
-
-  
-
 
   @Delete(':id')
   async delete(@Param('id') id: string): Promise<IUser> {

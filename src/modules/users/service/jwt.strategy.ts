@@ -12,12 +12,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       ignoreExpiration: false,
       secretOrKey: JWT_SECRET,
     });
-    
-    console.log("JwtStrategy initialized with secret:", "JWT_SECRET");
+
+    console.log('JwtStrategy initialized with secret:', 'JWT_SECRET');
   }
 
   async validate(payload: any) {
-    console.log("Validating payload:", payload);
     return { id: payload.id };
   }
 }

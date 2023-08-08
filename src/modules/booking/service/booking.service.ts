@@ -1,3 +1,4 @@
+import { Injectable } from '@nestjs/common';
 import { ISchedules } from '../..//schedules/dtos/schedules.dtos';
 import PaymentService from '../../payments/service/payments.service';
 import SchedulesService from '../../schedules/service/schedules.service';
@@ -8,6 +9,7 @@ export type IBookingData = {
   paymentData: IPayments;
 };
 
+@Injectable()
 class BookingService {
   constructor(
     private schedulesService: SchedulesService,
@@ -18,13 +20,15 @@ class BookingService {
     try {
       const { scheduleData, paymentData } = data;
       const schedule = await this.schedulesService.create(scheduleData);
+      const schedule_id = schedule._id.toString();
+      const user_id = schedule.user_id.toString();
 
       const paymentBody: IPayments = {
-        schedule_id: schedule._id,
+        schedule_id,
         price: paymentData.price,
         status: schedule.status === 'concluído' ? 'pago' : schedule.status,
       };
-      const payment = await this.paymentService.create(paymentBody);
+      const payment = await this.paymentService.create(paymentBody, user_id);
       const booking = {
         scheduleData: schedule,
         paymentData: payment,
@@ -51,20 +55,30 @@ class BookingService {
 
   async updateBooking(
     scheduleId: string,
-    data: IBookingData,
+    { scheduleData }: IBookingData,
   ): Promise<IBookingData> {
     try {
-      const existingBooking = await this.findBookingByScheduleId(scheduleId);
-      console.log(existingBooking);
+      const { scheduleData: existingSchedule, paymentData: existingPayment } =
+        await this.findBookingByScheduleId(scheduleId);
       const updatedSchedule = await this.schedulesService.update(
-        existingBooking.scheduleData._id,
-        data.scheduleData,
+        existingSchedule._id,
+        scheduleData,
       );
 
+      const user_id = updatedSchedule.user_id.toString();
+      const id = existingPayment._id.toString();
+
+      existingPayment.status =
+        existingSchedule.status === 'concluído'
+          ? 'pago'
+          : existingSchedule.status;
+
       const updatedPayment = await this.paymentService.update(
-        existingBooking.paymentData._id,
-        data.paymentData,
+        id,
+        existingPayment,
+        user_id,
       );
+
       return {
         scheduleData: updatedSchedule,
         paymentData: updatedPayment,
@@ -82,7 +96,6 @@ class BookingService {
           const payment = await this.paymentService.findByScheduleId(
             schedule._id,
           );
-
           return {
             scheduleData: schedule,
             paymentData: payment,

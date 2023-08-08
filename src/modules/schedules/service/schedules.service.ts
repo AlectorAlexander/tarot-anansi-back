@@ -6,8 +6,9 @@ import {
 } from './../dtos/schedules.dtos';
 import { IService } from '../../interfaces/IService';
 import NotificationService from 'src/modules/notifications/service/notifications.service';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 
+@Injectable()
 class SchedulesService implements IService<ISchedules> {
   private _schedule: SchedulesModel;
 
@@ -86,9 +87,11 @@ class SchedulesService implements IService<ISchedules> {
           message: 'Schedules already exist for this date',
         });
       }
-      const schedulesPendent = await this._schedule.read({
+      const filter = {
         status: 'pendente',
-      });
+        user_id: data.user_id,
+      };
+      const schedulesPendent = await this._schedule.read(filter);
       if (schedulesPendent && schedulesPendent.length > 0) {
         throw new BadRequestException({
           message: 'There are pending schedules',
@@ -165,6 +168,8 @@ class SchedulesService implements IService<ISchedules> {
       }
       return updatedSchedule || null;
     } catch (error) {
+      console.log(error);
+
       throw error;
     }
   }
