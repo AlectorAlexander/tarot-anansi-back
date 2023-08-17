@@ -1,10 +1,9 @@
-import { IService } from 'src/modules/interfaces/IService';
+import { IService } from '../../interfaces/IService';
 import { SafeParseError } from 'zod';
 import { IPayments, paymentsValidationSchema } from '../dtos/payments.dtos';
 import PaymentsModel from '../entities/payments.entity';
-import NotificationService from 'src/modules/notifications/service/notifications.service';
+import NotificationService from '../../notifications/service/notifications.service';
 import { Injectable } from '@nestjs/common';
-import { ObjectId } from 'mongodb';
 
 @Injectable()
 class PaymentService implements IService<IPayments> {

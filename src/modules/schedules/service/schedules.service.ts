@@ -5,7 +5,7 @@ import {
   schedulesValidationSchema,
 } from './../dtos/schedules.dtos';
 import { IService } from '../../interfaces/IService';
-import NotificationService from 'src/modules/notifications/service/notifications.service';
+import NotificationService from '../../notifications/service/notifications.service';
 import { BadRequestException, Injectable } from '@nestjs/common';
 
 @Injectable()
