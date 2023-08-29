@@ -16,6 +16,7 @@ import { SchedulesModule } from './schedules/schedules.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PaymentModule } from './payments/payments.module';
 import { sessionsModule } from './sessions/sessions.module';
+import { productsModule } from './products/products.module';
 const { JWT_SECRET } = process.env;
 
 @Module({
@@ -40,6 +41,7 @@ const { JWT_SECRET } = process.env;
     BookingModule,
     PaymentModule,
     sessionsModule,
+    productsModule,
   ],
   providers: [JwtStrategy, JwtAuthGuard],
 })

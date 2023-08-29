@@ -48,6 +48,8 @@ class UsersService implements IService<IUser> {
   public async create(data: IUser): Promise<string> {
     try {
       const user = await this.validateDataAndCreate(data);
+      console.log(user.role);
+
       return sign({ id: user._id, role: user.role }, JWT_SECRET, jwtConfig);
     } catch (error) {
       throw error;
