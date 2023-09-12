@@ -58,6 +58,16 @@ export class SchedulesController {
     }
   }
 
+  @Get('calendar')
+  async readAll(@Request() req: any): Promise<ISchedules[]> {
+    try {
+      const schedules = await this.schedulesService.read();
+      return schedules;
+    } catch (error) {
+      throw new NotFoundException('No schedules found');
+    }
+  }
+
   @Post('date')
   @UseGuards(JwtAuthGuard)
   async findByDate(
