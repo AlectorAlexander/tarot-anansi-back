@@ -18,6 +18,15 @@ import SessionsService from '../service/sessions.service';
 @Controller('sessions')
 export class SessionsController {
   constructor(private readonly SessionsService: SessionsService) {}
+  @Get()
+  async readAll(@Request() req: any): Promise<ISessions[]> {
+    try {
+      const sessions = await this.SessionsService.read();
+      return sessions;
+    } catch (error) {
+      throw new NotFoundException('No sessions found');
+    }
+  }
 
   @Post()
   @UseGuards(JwtAuthGuard)
