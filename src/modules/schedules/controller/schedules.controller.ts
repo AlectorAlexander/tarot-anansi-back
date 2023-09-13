@@ -19,16 +19,20 @@ import { JwtAuthGuard } from 'src/modules/users/service/jwt-auth.guard';
 export class SchedulesController {
   constructor(private readonly schedulesService: SchedulesService) {}
 
-  @Get('calendar')
-  async readAll(@Request() req: any): Promise<ISchedules[]> {
+  @Post('calendar')
+  async readAll(
+    @Body() dates: { start_date: Date; end_date?: Date },
+  ): Promise<ISchedules[]> {
     try {
-      const schedules = await this.schedulesService.read();
+      const schedules = await this.schedulesService.findByDate(
+        dates.start_date,
+        dates.end_date,
+      );
       return schedules;
     } catch (error) {
-      throw new NotFoundException('No schedules found');
+      throw new NotFoundException('No schedules found for this date');
     }
   }
-
   @Post()
   @UseGuards(JwtAuthGuard)
   async create(
