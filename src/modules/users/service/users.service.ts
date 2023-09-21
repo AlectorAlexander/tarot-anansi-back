@@ -132,6 +132,34 @@ class UsersService implements IService<IUser> {
     if (!User) throw new Error(ErrorTypes.EntityNotFound);
     return User;
   }
+
+  public async googleLogin(data: {
+    google_id: string;
+    email: string;
+    name: string;
+    profile_photo?: string;
+  }): Promise<string> {
+    const existingUser = await this._user.readOneByEmail(data.email);
+    if (existingUser) {
+      if (existingUser.google_id !== data.google_id) {
+        throw new Error('Email already registered without Google.');
+      }
+      return sign(
+        { id: existingUser._id, role: existingUser.role },
+        JWT_SECRET,
+        jwtConfig,
+      );
+    } else {
+      const user = await this._user.create({
+        role: 'user',
+        email: data.email,
+        name: data.name,
+        google_id: data.google_id,
+        profile_photo: data.profile_photo,
+      });
+      return sign({ id: user._id, role: user.role }, JWT_SECRET, jwtConfig);
+    }
+  }
 }
 
 export default UsersService;

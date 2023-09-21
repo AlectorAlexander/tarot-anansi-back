@@ -1,3 +1,4 @@
+/* eslint-disable indent */
 import {
   Controller,
   Post,
@@ -81,6 +82,24 @@ export class UsersController {
         throw new NotFoundException('User not found');
       }
       return deletedUser;
+    } catch (error) {
+      throw new BadRequestException({ message: error.message });
+    }
+  }
+
+  @Post('google-login')
+  async googleLogin(
+    @Body()
+    googleData: {
+      google_id: string;
+      email: string;
+      name: string;
+      profile_photo?: string;
+    },
+  ): Promise<string> {
+    try {
+      const token = await this.usersService.googleLogin(googleData);
+      return token;
     } catch (error) {
       throw new BadRequestException({ message: error.message });
     }

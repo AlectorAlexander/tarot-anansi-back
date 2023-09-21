@@ -33,6 +33,7 @@ export class SchedulesController {
       throw new NotFoundException('No schedules found for this date');
     }
   }
+
   @Post()
   @UseGuards(JwtAuthGuard)
   async create(
