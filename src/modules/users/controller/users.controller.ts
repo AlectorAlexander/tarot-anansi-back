@@ -104,4 +104,13 @@ export class UsersController {
       throw new BadRequestException({ message: error.message });
     }
   }
+  @Post('validate-token')
+  async validateToken(@Body('token') token: string): Promise<unknown> {
+    try {
+      const isValid = await this.usersService.validate(token);
+      return isValid;
+    } catch (error) {
+      throw new BadRequestException('Invalid token');
+    }
+  }
 }

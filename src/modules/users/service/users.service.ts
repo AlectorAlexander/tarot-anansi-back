@@ -72,15 +72,24 @@ class UsersService implements IService<IUser> {
     return sign({ id: user._id }, JWT_SECRET, jwtConfig);
   }
 
-  public async validate(token): Promise<boolean> {
+  public async validate(token): Promise<unknown> {
     try {
       const decodedToken = verify(token, JWT_SECRET) as { id: string };
+
       const userId = decodedToken.id;
       const user = await this._user.readOne(userId);
       if (user) {
-        return true;
+        return {
+          isValid: true,
+          user: {
+            name: user.name,
+            email: user.email,
+            id: user._id,
+            photo: user.profile_photo,
+          },
+        };
       } else {
-        return false;
+        return { isValid: false };
       }
     } catch (error) {
       throw new Error('Invalid token');
