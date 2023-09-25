@@ -26,6 +26,7 @@ export class UsersController {
       const createdUserId = await this.usersService.create(userData);
       return createdUserId;
     } catch (error) {
+      console.log(error.message);
       throw new BadRequestException({ message: error.message });
     }
   }
@@ -36,12 +37,14 @@ export class UsersController {
   ): Promise<string> {
     try {
       const { email, password } = loginData;
+      console.log('controller ', email, password);
       const user = await this.usersService.readOne(email, password);
       if (!user) {
         throw new NotFoundException('User not found');
       }
       return user;
     } catch (error) {
+      console.log(error);
       throw new BadRequestException({ message: error.message });
     }
   }

@@ -5,6 +5,7 @@ import { hash, compare } from 'bcrypt';
 import 'dotenv/config';
 import UserModel from '../entities/users.entity';
 import { SafeParseError } from 'zod';
+import { ConflictException } from '@nestjs/common';
 
 export enum ErrorTypes {
   EntityNotFound = 'EntityNotFound',
@@ -47,17 +48,25 @@ class UsersService implements IService<IUser> {
 
   public async create(data: IUser): Promise<string> {
     try {
+      // Verificar se o e-mail já existe no banco de dados
+      const existingUser = await this._user.readOneByEmail(data.email);
+      if (existingUser) {
+        throw new ConflictException('O e-mail fornecido já está registrado.');
+      }
+      data.role = 'user';
       const user = await this.validateDataAndCreate(data);
-      console.log(user.role);
 
-      return sign({ id: user._id, role: user.role }, JWT_SECRET, jwtConfig);
+      return sign({ id: user._id, role: 'user' }, JWT_SECRET, jwtConfig);
     } catch (error) {
+      console.log(error);
+
       throw error;
     }
   }
 
   public async readOne(email: string, password: string): Promise<string> {
     const user = await this._user.readOneByEmail(email);
+    console.log('service ', user);
 
     if (!user) {
       throw new Error(ErrorTypes.EntityNotFound);
