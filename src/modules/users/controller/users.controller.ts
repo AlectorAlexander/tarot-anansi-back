@@ -37,7 +37,6 @@ export class UsersController {
   ): Promise<string> {
     try {
       const { email, password } = loginData;
-      console.log('controller ', email, password);
       const user = await this.usersService.readOne(email, password);
       if (!user) {
         throw new NotFoundException('User not found');
@@ -80,14 +79,15 @@ export class UsersController {
   @Put('byEmail')
   async updateByEmail(
     @Request() req: any,
-    @Body() userUpdates: IUser | object,
-  ): Promise<IUser> {
+    @Body() userUpdates: IUser | any,
+  ): Promise<string> {
     try {
-      const userEmail = req.user.email;
+      const { email, ...restOfUserUpdates } = userUpdates;
       const updatedUser = await this.usersService.updateByEmail(
-        userEmail,
-        userUpdates,
+        email || 'pamonha',
+        restOfUserUpdates,
       );
+
       if (!updatedUser) {
         throw new NotFoundException('User not found');
       }

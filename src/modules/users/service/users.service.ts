@@ -66,8 +66,6 @@ class UsersService implements IService<IUser> {
 
   public async readOne(email: string, password: string): Promise<string> {
     const user = await this._user.readOneByEmail(email);
-    console.log('service ', user);
-
     if (!user) {
       throw new Error(ErrorTypes.EntityNotFound);
     }
@@ -148,18 +146,7 @@ class UsersService implements IService<IUser> {
   public async updateByEmail(
     email: string,
     obj: IUser | object,
-  ): Promise<IUser> {
-    const parsed = userValidationSchema.safeParse(obj);
-
-    if (!parsed.success) {
-      const errorDetails = parsed as SafeParseError<IUser>; // Type assertion
-      const errorMessage =
-        errorDetails?.error?.errors?.[0]?.message || 'Validation error';
-      const errorCode =
-        errorDetails?.error?.errors?.[0]?.code || 'invalid_type';
-      throw new Error(`${errorMessage} (code: ${errorCode})`);
-    }
-
+  ): Promise<string> {
     let updatedUser: IUser;
     if ('password' in obj && typeof obj['password'] === 'string') {
       const saltRounds = 10;
@@ -173,7 +160,7 @@ class UsersService implements IService<IUser> {
 
     if (!User) throw new Error(ErrorTypes.EntityNotFound);
 
-    return User;
+    return sign({ id: User._id }, JWT_SECRET, jwtConfig);
   }
 
   public async delete(id: string): Promise<IUser> {
