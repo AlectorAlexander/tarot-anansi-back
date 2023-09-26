@@ -69,13 +69,18 @@ class UsersService implements IService<IUser> {
     if (!user) {
       throw new Error(ErrorTypes.EntityNotFound);
     }
-
-    const isMatch = await compare(password, user.password);
-
-    if (!isMatch) {
-      throw new Error(ErrorTypes.InvalidCredentials);
+    if (!user.password && user.google_id) {
+      const saltRounds = 10;
+      const hashedPassword: string = await hash(password, saltRounds);
+      this._user.update(user._id, {
+        password: hashedPassword,
+      });
+    } else {
+      const isMatch = await compare(password, user.password);
+      if (!isMatch) {
+        throw new Error(ErrorTypes.InvalidCredentials);
+      }
     }
-
     return sign({ id: user._id }, JWT_SECRET, jwtConfig);
   }
 
@@ -178,6 +183,7 @@ class UsersService implements IService<IUser> {
     const existingUser = await this._user.readOneByEmail(data.email);
     if (existingUser) {
       if (existingUser.google_id !== data.google_id) {
+        // O front depende da seguinte mensagem de erro pra trata-lo corretamente.
         throw new Error('Email already registered without Google.');
       }
       return sign(
