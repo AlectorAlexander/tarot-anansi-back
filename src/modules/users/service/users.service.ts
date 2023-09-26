@@ -111,7 +111,7 @@ class UsersService implements IService<IUser> {
       throw new Error(ErrorTypes.EntityNotFound);
     }
     const users = results.map((user) => {
-      const { password, ...userWithoutPassword } = user;
+      const { ...userWithoutPassword } = user;
       return userWithoutPassword;
     });
     return users;
@@ -139,6 +139,37 @@ class UsersService implements IService<IUser> {
     }
 
     const User = await this._user.update(id, updatedUser);
+
+    if (!User) throw new Error(ErrorTypes.EntityNotFound);
+
+    return User;
+  }
+
+  public async updateByEmail(
+    email: string,
+    obj: IUser | object,
+  ): Promise<IUser> {
+    const parsed = userValidationSchema.safeParse(obj);
+
+    if (!parsed.success) {
+      const errorDetails = parsed as SafeParseError<IUser>; // Type assertion
+      const errorMessage =
+        errorDetails?.error?.errors?.[0]?.message || 'Validation error';
+      const errorCode =
+        errorDetails?.error?.errors?.[0]?.code || 'invalid_type';
+      throw new Error(`${errorMessage} (code: ${errorCode})`);
+    }
+
+    let updatedUser: IUser;
+    if ('password' in obj && typeof obj['password'] === 'string') {
+      const saltRounds = 10;
+      const hashedPassword: string = await hash(obj['password'], saltRounds);
+      updatedUser = { ...obj, password: hashedPassword };
+    } else {
+      updatedUser = obj as IUser;
+    }
+
+    const User = await this._user.updateByEmail(email, updatedUser);
 
     if (!User) throw new Error(ErrorTypes.EntityNotFound);
 

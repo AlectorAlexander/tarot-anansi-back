@@ -77,6 +77,26 @@ export class UsersController {
     }
   }
 
+  @Put('byEmail')
+  async updateByEmail(
+    @Request() req: any,
+    @Body() userUpdates: IUser | object,
+  ): Promise<IUser> {
+    try {
+      const userEmail = req.user.email;
+      const updatedUser = await this.usersService.updateByEmail(
+        userEmail,
+        userUpdates,
+      );
+      if (!updatedUser) {
+        throw new NotFoundException('User not found');
+      }
+      return updatedUser;
+    } catch (error) {
+      throw new BadRequestException({ message: error.message });
+    }
+  }
+
   @Delete(':id')
   async delete(@Param('id') id: string): Promise<IUser> {
     try {

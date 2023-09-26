@@ -50,6 +50,20 @@ abstract class MongoModel<T extends Document> implements IModel<T> {
     return updatedObj;
   }
 
+  async updateByEmail(email: string, obj: Partial<T>): Promise<T | null> {
+    if (!email) {
+      throw new Error('Email is required.');
+    }
+    const updatedObj = await this.model.findOneAndUpdate(
+      { email: email },
+      obj,
+      {
+        new: true,
+      },
+    );
+    return updatedObj;
+  }
+
   async delete(_id: string): Promise<T | null> {
     if (!isValidObjectId(_id)) {
       throw new Error('Invalid _id format.');
