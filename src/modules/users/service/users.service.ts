@@ -53,10 +53,13 @@ class UsersService implements IService<IUser> {
       if (existingUser) {
         throw new ConflictException('O e-mail fornecido já está registrado.');
       }
-      data.role = 'user';
+      if (!data.role) {
+        data.role = 'user';
+      }
+
       const user = await this.validateDataAndCreate(data);
 
-      return sign({ id: user._id, role: 'user' }, JWT_SECRET, jwtConfig);
+      return sign({ id: user._id, role: user.role }, JWT_SECRET, jwtConfig);
     } catch (error) {
       console.log(error);
 
@@ -81,7 +84,7 @@ class UsersService implements IService<IUser> {
         throw new Error(ErrorTypes.InvalidCredentials);
       }
     }
-    return sign({ id: user._id }, JWT_SECRET, jwtConfig);
+    return sign({ id: user._id, role: user.role }, JWT_SECRET, jwtConfig);
   }
 
   public async validate(token): Promise<unknown> {
