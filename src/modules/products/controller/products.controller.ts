@@ -68,16 +68,43 @@ export class ProductController {
     }
   }
 
+  @Put('updateWithout/:id')
+  async updateWithoutToken(
+    @Request() req: any,
+    @Param('id') id: string,
+    @Body() { data, secret }: { data: IProduct; secret: string },
+  ): Promise<IProduct> {
+    try {
+      if (secret === process.env.APP_SECRET_KEY) {
+        const updatedProduct = await this.ProductService.update(id, data);
+        if (!updatedProduct) {
+          throw new NotFoundException('product not found');
+        }
+        return updatedProduct;
+      } else {
+        throw new BadRequestException({
+          message: 'Failed to update product',
+          details: 'Only admins can update products',
+        });
+      }
+    } catch (error) {
+      throw new BadRequestException({
+        message: 'Failed to update product',
+        details: error.message,
+      });
+    }
+  }
+
   @Put(':id')
   @UseGuards(JwtAuthGuard)
   async update(
     @Request() req: any,
     @Param('id') id: string,
-    @Body() data: IProduct,
+    @Body() { data, secret }: { data: IProduct; secret: string },
   ): Promise<IProduct> {
     try {
       const role = req.user.role;
-      if (role === 'admin') {
+      if (role === 'admin' || secret === process.env.APP_SECRET_KEY) {
         const updatedProduct = await this.ProductService.update(id, data);
         if (!updatedProduct) {
           throw new NotFoundException('product not found');

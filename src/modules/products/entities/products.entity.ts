@@ -10,6 +10,7 @@ export const productSchema = new Schema<IProduct & Document>({
   price: { type: Number, required: true },
   date_creation: { type: Date, default: Date.now, required: true },
   date_update: { type: Date, default: Date.now, required: true },
+  stripe_id: { type: String, required: false },
 });
 
 class productModel extends MongoModel<IProduct & Document> {

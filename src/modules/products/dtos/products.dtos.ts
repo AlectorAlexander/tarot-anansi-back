@@ -12,6 +12,7 @@ export const productValidationSchema = z.object({
   price: z.number().min(0.01).max(999999.99).optional(),
   date_creation: z.date().optional(),
   date_update: z.date().optional(),
+  stripe_id: z.string().optional(),
 });
 
 export type IProduct = z.infer<typeof productValidationSchema>;
