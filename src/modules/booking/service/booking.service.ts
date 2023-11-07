@@ -10,6 +10,7 @@ export type IBookingData = {
   scheduleData: ISchedules;
   paymentData: IPayments;
   sessionData: ISessions | string;
+  sessionName?: string;
 };
 
 @Injectable()
@@ -53,7 +54,7 @@ class BookingService {
 
         const sessionBody = {
           schedule_id: schedule_id,
-          date: `A sessão com este usuário está marcada para a data ${day}/${month}/${year} às ${hours}:${minutes}`,
+          date: `A sessão de ${data.sessionName}  com este usuário está marcada para a data ${day}/${month}/${year} às ${hours}:${minutes}`,
           price: paymentData.price,
         };
         const session = await this.sessionService.create(sessionBody);

@@ -24,15 +24,33 @@ export class BookingController {
     @Body() data: IBookingData,
   ): Promise<IBookingData> {
     try {
+      if (!data.scheduleData || !data.paymentData) {
+        console.log('yo');
+        throw new BadRequestException({
+          message: 'Missing scheduleData or paymentData',
+          details: 'read the message, fool',
+        });
+      }
+
       const userId = req.user.id;
+
       data.scheduleData.user_id = userId;
       data.scheduleData.start_date = new Date(data.scheduleData.start_date);
       data.scheduleData.end_date = new Date(data.scheduleData.end_date);
+
       const booking = await this.bookingService.createBooking(data);
+
+      if (!booking) {
+        throw new BadRequestException({
+          message: 'Failed to create booking',
+          details: 'Booking creation returned null',
+        });
+      }
+
       return booking;
     } catch (error) {
       throw new BadRequestException({
-        message: 'Failed to create booking',
+        message: error.message || 'Failed to create booking',
         details: error.message,
       });
     }
