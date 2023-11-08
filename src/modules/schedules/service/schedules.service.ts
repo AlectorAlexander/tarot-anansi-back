@@ -36,7 +36,7 @@ class SchedulesService implements IService<ISchedules> {
     );
 
     let message = '';
-    if (status === 'pago') {
+    if (status === 'agendado') {
       message = `Seu agendamento foi marcado para o dia ${start_date_formatted} às ${start_time_formatted}`;
     } else if (status === 'cancelado') {
       message = `Seu agendamento para o dia ${start_date_formatted} às ${start_time_formatted} foi cancelado`;

@@ -6,10 +6,12 @@ import {
 import NotificationModel from '../entities/notifications.entity';
 import { SafeParseError } from 'zod';
 import { Injectable } from '@nestjs/common';
+import { NotificationsGateway } from '../gateway/notification.gateway';
 
 @Injectable()
 class NotificationService implements IService<INotifications> {
   private _notifications: NotificationModel;
+  private notificationsGateway: NotificationsGateway;
 
   constructor() {
     this._notifications = new NotificationModel();
@@ -38,7 +40,9 @@ class NotificationService implements IService<INotifications> {
 
   public async create(data: INotifications): Promise<INotifications> {
     try {
-      return this.validateDataAndCreate(data);
+      const notification = this.validateDataAndCreate(data);
+      this.notificationsGateway.sendNotification(notification);
+      return notification;
     } catch (error) {
       throw error;
     }

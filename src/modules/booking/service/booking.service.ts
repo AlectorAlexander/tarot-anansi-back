@@ -31,10 +31,14 @@ class BookingService {
           : schedule._id;
       const user_id = schedule.user_id.toString();
 
+      const stats = schedule.status === 'pendente' ? 'pendente' : 'cancelado';
+
+      const stats2 = schedule.status === 'reembolsado' ? 'reembolsado' : stats;
+
       const paymentBody: IPayments = {
         schedule_id,
         price: paymentData.price,
-        status: schedule.status === 'concluído' ? 'pago' : schedule.status,
+        status: schedule.status === 'agendado' || 'concluído' ? 'pago' : stats2,
       };
 
       const payment = await this.paymentService.create(paymentBody, user_id);
@@ -54,7 +58,7 @@ class BookingService {
 
         const sessionBody = {
           schedule_id: schedule_id,
-          date: `A sessão de ${data.sessionName}  com este usuário está marcada para a data ${day}/${month}/${year} às ${hours}:${minutes}`,
+          date: `Nova sessão de ${data.sessionName} agendada para a data ${day}/${month}/${year} às ${hours}:${minutes}`,
           price: paymentData.price,
         };
         const session = await this.sessionService.create(sessionBody);
@@ -109,10 +113,14 @@ class BookingService {
       const user_id = updatedSchedule.user_id.toString();
       const id = existingPayment._id.toString();
 
+      const stats =
+        existingSchedule.status === 'pendente' ? 'pendente' : 'cancelado';
+
+      const stats2 =
+        existingSchedule.status === 'reembolsado' ? 'reembolsado' : stats;
+
       existingPayment.status =
-        existingSchedule.status === 'concluído'
-          ? 'pago'
-          : existingSchedule.status;
+        existingSchedule.status === 'agendado' || 'concluído' ? 'pago' : stats2;
 
       const updatedPayment = await this.paymentService.update(
         id,
