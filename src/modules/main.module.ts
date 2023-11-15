@@ -17,6 +17,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { PaymentModule } from './payments/payments.module';
 import { sessionsModule } from './sessions/sessions.module';
 import { productsModule } from './products/products.module';
+import { WebSocketGateway } from './notifications/gateway/notification.gateway';
 const { JWT_SECRET } = process.env;
 
 @Module({

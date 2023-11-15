@@ -1,3 +1,4 @@
+import { WebSocketGateway } from './../gateway/notification.gateway';
 import { IService } from 'src/modules/interfaces/IService';
 import {
   INotifications,
@@ -5,15 +6,14 @@ import {
 } from '../dtos/notifications.dtos';
 import NotificationModel from '../entities/notifications.entity';
 import { SafeParseError } from 'zod';
-import { Injectable } from '@nestjs/common';
-import { NotificationsGateway } from '../gateway/notification.gateway';
+import { Inject, Injectable } from '@nestjs/common';
 
 @Injectable()
 class NotificationService implements IService<INotifications> {
   private _notifications: NotificationModel;
-  private notificationsGateway: NotificationsGateway;
-
-  constructor() {
+  constructor(
+    @Inject(WebSocketGateway) private notificationGateway: WebSocketGateway,
+  ) {
     this._notifications = new NotificationModel();
   }
 
@@ -40,8 +40,8 @@ class NotificationService implements IService<INotifications> {
 
   public async create(data: INotifications): Promise<INotifications> {
     try {
-      const notification = this.validateDataAndCreate(data);
-      this.notificationsGateway.sendNotification(notification);
+      const notification = await this.validateDataAndCreate(data);
+      this.notificationGateway.sendNotificationToUser(notification);
       return notification;
     } catch (error) {
       throw error;

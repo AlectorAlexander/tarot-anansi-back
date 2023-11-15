@@ -6,6 +6,7 @@ import 'dotenv/config';
 import UserModel from '../entities/users.entity';
 import { SafeParseError } from 'zod';
 import { ConflictException } from '@nestjs/common';
+import { validateToken } from 'src/modules/interfaces/interfaces';
 
 export enum ErrorTypes {
   EntityNotFound = 'EntityNotFound',
@@ -87,7 +88,7 @@ class UsersService implements IService<IUser> {
     return sign({ id: user._id, role: user.role }, JWT_SECRET, jwtConfig);
   }
 
-  public async validate(token): Promise<unknown> {
+  public async validate(token): Promise<validateToken> {
     try {
       const decodedToken = verify(token, JWT_SECRET) as { id: string };
 
