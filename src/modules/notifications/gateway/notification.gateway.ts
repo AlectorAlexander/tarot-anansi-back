@@ -45,8 +45,7 @@ export class WebSocketGateway implements OnModuleInit {
               const userId = user.id.toString(); // Converte ObjectId para string, se necessário
               this.clientMap.set(userId, connection);
             } else {
-              connection.close(); // Fecha a conexão caso a autenticação falhe.
-              throw new Error('Invalid credentials'); // Lança uma exceção com a mensagem de erro.
+              connection.close();
             }
           } catch (error) {
             console.log(error);

@@ -5,5 +5,6 @@ export interface validateToken {
     email: string;
     id: string;
     photo: string;
+    isAdmin: boolean;
   };
 }

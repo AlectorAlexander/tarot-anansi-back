@@ -95,6 +95,7 @@ class UsersService implements IService<IUser> {
       const userId = decodedToken.id;
       const user = await this._user.readOne(userId);
       if (user) {
+        const isAdmin = user.role === 'admin';
         return {
           isValid: true,
           user: {
@@ -102,13 +103,14 @@ class UsersService implements IService<IUser> {
             email: user.email,
             id: user._id,
             photo: user.profile_photo,
+            isAdmin,
           },
         };
       } else {
         return { isValid: false };
       }
     } catch (error) {
-      throw new Error('Invalid token');
+      return { isValid: false };
     }
   }
 

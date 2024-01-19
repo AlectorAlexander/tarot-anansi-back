@@ -25,7 +25,6 @@ export class BookingController {
   ): Promise<IBookingData> {
     try {
       if (!data.scheduleData || !data.paymentData) {
-        console.log('yo');
         throw new BadRequestException({
           message: 'Missing scheduleData or paymentData',
           details: 'read the message, fool',
