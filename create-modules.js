@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable prettier/prettier */
 // create-modules.js
 const shell = require('shelljs');
 
@@ -14,21 +16,59 @@ modules.forEach((module) => {
   shell.mkdir('-p', `${modulePath}/service`);
 
   // Create files with basic content
-  shell.ShellString(`export class ${moduleName.charAt(0).toUpperCase() + moduleName.slice(1)}Controller {}`).to(`${modulePath}/controller/${moduleName}.controller.ts`);
-  shell.ShellString(`export class ${moduleName.charAt(0).toUpperCase() + moduleName.slice(1)}Dto {}`).to(`${modulePath}/dtos/${moduleName}.dtos.ts`);
-  shell.ShellString(`export class ${moduleName.charAt(0).toUpperCase() + moduleName.slice(1)}Entity {}`).to(`${modulePath}/entities/${moduleName}.entity.ts`);
-  shell.ShellString(`export class ${moduleName.charAt(0).toUpperCase() + moduleName.slice(1)}Service {}`).to(`${modulePath}/service/${moduleName}.service.ts`);
+  shell
+    .ShellString(
+      `export class ${
+        moduleName.charAt(0).toUpperCase() + moduleName.slice(1)
+      }Controller {}`,
+    )
+    .to(`${modulePath}/controller/${moduleName}.controller.ts`);
+  shell
+    .ShellString(
+      `export class ${
+        moduleName.charAt(0).toUpperCase() + moduleName.slice(1)
+      }Dto {}`,
+    )
+    .to(`${modulePath}/dtos/${moduleName}.dtos.ts`);
+  shell
+    .ShellString(
+      `export class ${
+        moduleName.charAt(0).toUpperCase() + moduleName.slice(1)
+      }Entity {}`,
+    )
+    .to(`${modulePath}/entities/${moduleName}.entity.ts`);
+  shell
+    .ShellString(
+      `export class ${
+        moduleName.charAt(0).toUpperCase() + moduleName.slice(1)
+      }Service {}`,
+    )
+    .to(`${modulePath}/service/${moduleName}.service.ts`);
 
   // Create module file
-  shell.ShellString(`
+  shell
+    .ShellString(
+      `
 import { Module } from '@nestjs/common';
-import { ${moduleName.charAt(0).toUpperCase() + moduleName.slice(1)}Controller } from './controller/${moduleName}.controller';
-import { ${moduleName.charAt(0).toUpperCase() + moduleName.slice(1)}Service } from './service/${moduleName}.service';
+import { ${
+  moduleName.charAt(0).toUpperCase() + moduleName.slice(1)
+}Controller } from './controller/${moduleName}.controller';
+import { ${
+  moduleName.charAt(0).toUpperCase() + moduleName.slice(1)
+}Service } from './service/${moduleName}.service';
 
 @Module({
-  controllers: [${moduleName.charAt(0).toUpperCase() + moduleName.slice(1)}Controller],
-  providers: [${moduleName.charAt(0).toUpperCase() + moduleName.slice(1)}Service],
+  controllers: [${
+  moduleName.charAt(0).toUpperCase() + moduleName.slice(1)
+}Controller],
+  providers: [${
+  moduleName.charAt(0).toUpperCase() + moduleName.slice(1)
+}Service],
 })
-export class ${moduleName.charAt(0).toUpperCase() + moduleName.slice(1)}Module {}
-`).to(`${modulePath}/${moduleName}.module.ts`);
+export class ${
+  moduleName.charAt(0).toUpperCase() + moduleName.slice(1)
+}Module {}
+`,
+    )
+    .to(`${modulePath}/${moduleName}.module.ts`);
 });
