@@ -41,6 +41,19 @@ export class PostController {
     }
   }
 
+  @Get('recent/:limit')
+  async getRecentPosts(@Param('limit') limit: number): Promise<IPost[]> {
+    try {
+      const recentPosts = await this.PostService.getRecentPosts(limit);
+      return recentPosts;
+    } catch (error) {
+      throw new BadRequestException({
+        message: 'Failed to get recent posts',
+        details: error.message,
+      });
+    }
+  }
+
   @Get()
   async read(): Promise<IPost[]> {
     try {

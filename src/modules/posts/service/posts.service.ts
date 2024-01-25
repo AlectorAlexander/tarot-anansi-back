@@ -18,6 +18,23 @@ class PostService implements IService<IPost> {
     return dateA.getTime() - dateB.getTime();
   }
 
+  public async getRecentPosts(limit: number): Promise<IPost[]> {
+    try {
+      const postsFromDB = await this._post.read();
+      const posts = postsFromDB.map((post) => ({
+        ...post,
+      }));
+
+      posts.sort(this.sortByDateCreation);
+
+      const recentPosts = posts.reverse().slice(0, limit);
+
+      return recentPosts;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   private async validateDataAndCreate(data: IPost): Promise<IPost> {
     const parsed = postValidationSchema.safeParse(data);
 

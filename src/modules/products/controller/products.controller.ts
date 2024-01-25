@@ -10,23 +10,24 @@ import {
   BadRequestException,
   UseGuards,
   Request,
+  HttpException,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/modules/users/service/jwt-auth.guard';
 import { IProduct } from '../dtos/products.dtos';
 import ProductService from '../service/products.service';
+import { log } from 'console';
 
 @Controller('products')
 export class ProductController {
-  constructor(private readonly ProductService: ProductService) {}
+  constructor(private readonly productService: ProductService) {}
 
   @Post()
   @UseGuards(JwtAuthGuard)
   async create(@Request() req: any, @Body() data: IProduct): Promise<IProduct> {
     try {
-      console.log(req.user);
       const role = req.user.role;
       if (role === 'admin') {
-        const product = await this.ProductService.create(data);
+        const product = await this.productService.create(data);
         return product;
       } else {
         throw new BadRequestException({
@@ -35,36 +36,48 @@ export class ProductController {
         });
       }
     } catch (error) {
-      throw new BadRequestException({
-        message: 'Failed to create product',
-        details: error.message,
-      });
+      if (error instanceof HttpException) {
+        throw error;
+      } else {
+        throw new BadRequestException({
+          message: error.message,
+          details: error || 'An unexpected error occurred',
+        });
+      }
     }
   }
 
   @Get()
   async read(): Promise<IProduct[]> {
     try {
-      const products = await this.ProductService.read();
+      const products = await this.productService.read();
       return products;
     } catch (error) {
-      throw new BadRequestException({
-        message: 'Failed to read products',
-        details: error.message,
-      });
+      if (error instanceof HttpException) {
+        throw error; // Retorna a mensagem de erro personalizada do serviço
+      } else {
+        throw new BadRequestException({
+          message: error.message,
+          details: error || 'An unexpected error occurred',
+        });
+      }
     }
   }
 
   @Get(':id')
   async readOne(@Param('id') id: string): Promise<IProduct> {
     try {
-      const product = await this.ProductService.readOne(id);
+      const product = await this.productService.readOne(id);
       if (!product) {
-        throw new NotFoundException('product not found');
+        throw new NotFoundException('Product not found');
       }
       return product;
     } catch (error) {
-      throw new NotFoundException('product not found');
+      if (error instanceof HttpException) {
+        throw error; // Retorna a mensagem de erro personalizada do serviço
+      } else {
+        throw new NotFoundException('Product not found');
+      }
     }
   }
 
@@ -76,9 +89,9 @@ export class ProductController {
   ): Promise<IProduct> {
     try {
       if (secret === process.env.APP_SECRET_KEY) {
-        const updatedProduct = await this.ProductService.update(id, data);
+        const updatedProduct = await this.productService.update(id, data);
         if (!updatedProduct) {
-          throw new NotFoundException('product not found');
+          throw new NotFoundException('Product not found');
         }
         return updatedProduct;
       } else {
@@ -88,10 +101,14 @@ export class ProductController {
         });
       }
     } catch (error) {
-      throw new BadRequestException({
-        message: 'Failed to update product',
-        details: error.message,
-      });
+      if (error instanceof HttpException) {
+        throw error; // Retorna a mensagem de erro personalizada do serviço
+      } else {
+        throw new BadRequestException({
+          message: error.message,
+          details: error || 'An unexpected error occurred',
+        });
+      }
     }
   }
 
@@ -104,10 +121,12 @@ export class ProductController {
   ): Promise<IProduct> {
     try {
       const role = req.user.role;
+      console.log({ role, id, data });
+
       if (role === 'admin' || secret === process.env.APP_SECRET_KEY) {
-        const updatedProduct = await this.ProductService.update(id, data);
+        const updatedProduct = await this.productService.update(id, data);
         if (!updatedProduct) {
-          throw new NotFoundException('product not found');
+          throw new NotFoundException('Product not found');
         }
         return updatedProduct;
       } else {
@@ -117,10 +136,14 @@ export class ProductController {
         });
       }
     } catch (error) {
-      throw new BadRequestException({
-        message: 'Failed to update product',
-        details: error.message,
-      });
+      if (error instanceof HttpException) {
+        throw error; // Retorna a mensagem de erro personalizada do serviço
+      } else {
+        throw new BadRequestException({
+          message: error.message,
+          details: error || 'An unexpected error occurred',
+        });
+      }
     }
   }
 
@@ -133,9 +156,9 @@ export class ProductController {
     try {
       const role = req.user.role;
       if (role === 'admin') {
-        const deletedProduct = await this.ProductService.delete(id);
+        const deletedProduct = await this.productService.delete(id);
         if (!deletedProduct) {
-          throw new NotFoundException('product not found');
+          throw new NotFoundException('Product not found');
         }
         return deletedProduct;
       } else {
@@ -145,10 +168,14 @@ export class ProductController {
         });
       }
     } catch (error) {
-      throw new BadRequestException({
-        message: 'Failed to delete product',
-        details: error.message,
-      });
+      if (error instanceof HttpException) {
+        throw error; // Retorna a mensagem de erro personalizada do serviço
+      } else {
+        throw new BadRequestException({
+          message: error.message,
+          details: error || 'An unexpected error occurred',
+        });
+      }
     }
   }
 }
