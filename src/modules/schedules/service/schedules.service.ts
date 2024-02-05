@@ -182,6 +182,70 @@ class SchedulesService implements IService<ISchedules> {
       throw error;
     }
   }
+
+  public async filterAvailableSlots(
+    dateInput: string | Date, // pode aceitar ambos os tipos
+    slots: string[],
+  ): Promise<string[]> {
+    // Garanta que a data seja um objeto Date
+    const date = new Date(dateInput);
+
+    const dayStart = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+      0,
+      0,
+      0,
+    );
+    const dayEnd = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+      23,
+      59,
+      59,
+    );
+
+    // Encontre os agendamentos existentes para o dia
+    const existingAppointments = await this.findByDate(dayStart, dayEnd);
+
+    // Filtre os slots que não se sobrepõem a nenhum agendamento existente
+    const availableSlots = slots.filter((slot) => {
+      const [startTime, endTime] = slot.split(' - ');
+      const [startHour, startMinute] = startTime.split(':').map(Number);
+      const [endHour, endMinute] = endTime.split(':').map(Number);
+
+      const slotStart = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        startHour,
+        startMinute,
+      );
+      const slotEnd = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        endHour,
+        endMinute,
+      );
+
+      // Verifique se o slot está disponível
+      return !existingAppointments.some((appointment) => {
+        const appointmentStart = new Date(appointment.start_date);
+        const appointmentEnd = new Date(appointment.end_date);
+
+        // Se o slot começa durante outro agendamento ou se um agendamento começa durante o slot
+        return (
+          (slotStart >= appointmentStart && slotStart < appointmentEnd) ||
+          (appointmentStart >= slotStart && appointmentStart < slotEnd)
+        );
+      });
+    });
+
+    return availableSlots;
+  }
 }
 
 export default SchedulesService;

@@ -14,6 +14,7 @@ import {
 import { ISchedules } from '../dtos/schedules.dtos';
 import SchedulesService from '../service/schedules.service';
 import { JwtAuthGuard } from 'src/modules/users/service/jwt-auth.guard';
+import { log } from 'console';
 
 @Controller('schedules')
 export class SchedulesController {
@@ -138,6 +139,28 @@ export class SchedulesController {
     } catch (error) {
       throw new BadRequestException({
         message: 'Failed to delete schedule',
+        details: error.message,
+      });
+    }
+  }
+
+  @Post('filter-slots')
+  async filterSlots(
+    @Body() body: { date: Date; slots: string[] },
+  ): Promise<string[]> {
+    try {
+      const { date, slots } = body;
+
+      const filteredSlots = await this.schedulesService.filterAvailableSlots(
+        date,
+        slots,
+      );
+      return filteredSlots;
+    } catch (error) {
+      console.log(error);
+
+      throw new BadRequestException({
+        message: 'Failed to filter available slots',
         details: error.message,
       });
     }
