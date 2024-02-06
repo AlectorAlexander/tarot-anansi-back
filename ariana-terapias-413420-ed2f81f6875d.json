@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "ariana-terapias-413420",
+  "private_key_id": "ed2f81f6875d1b4e39dd0b88fa731d921f461f39",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC/2McFwslx/OPm\nyNcKbZohB5U3NT/Z+bHxi7WTXU9uL3cSE/TCMrits5FDI/wzzGTDFIByUC90zXVv\npd/eslwinbEApSEr2lusZiGYwKf1gVOi1smJc/7WMscE/CQX6nUMa/lecRHZs9Vl\nc6veyRuqK1PMl0s2saeMMunnEmSlO4FYmqnHdbhztM99FV1RKxExjVcZuRnZqMGn\nzruddyoXM714Ut2rV1DqyhKJg4zswmfJi6ZrORtcklQoGfmN66ov0RzBO7b0EUT7\nieoTdn4d3sOLGsvCDjiFxPAKqH9K44C1DrclOj8UsAkPDBw5jk0ClfrEkqt2f3ee\n0BQcYsG7AgMBAAECggEAPssqoYUXQJsg0WpNkJk9SLBds9tXEfa7uq8a+KgjFpKs\nq5sikundLuXGly5RH3c4R+4O+NusHNQfKzMk6pSAucfZprdl+x+WwAAR4Ri2IRJ6\nmKMrBjWUZPHr2ILbIYTZWP6CedoSmKpXH8TTrbEvv+w8mouuz7EogSgtDTgk/zu/\nY2vCXbUMGaOGpRpD6Oj65d8as5AUXUE42clLiHAPTHZL/DcNQiT+Sp36SIGm1r87\nLWXsTtfqfBofnU3tan3MxywjQOV+psrfLpsd8usPL7Rj3ArpP1o3TBeb9vt2v7mi\nbostAF0bXogJoVHGQkfmbMG4YcdUBq2+wOjjm7SWWQKBgQD+7NXFJgjAz6xYlA5j\nPQp2bQvvDjlavWym0CfumKterI7ggsBe5oUO+z+QmpPruy+ARGsxtBL0sVBuFbal\n5V/zqisGkIgOr6g2l3H328+z+6/ZuPNpogw9ALHrS64/Q/eOY/hIr7drnhQi34FV\no+6vAgI18pJ7KK4BKoiNIU0dBwKBgQDAp9sd9/3BS9gOXACOXt9Wvpwn8EGCuzcB\n+LIQGprLx8Je+dsuPBOXi1CLYSKMdY/fvk1eI4VGQi6CUiVVA42ehdQr382SYGPI\nF86FPvqgPEbDVwgcv58vAxmtWFCMoVhnB+Zm39ffRUGdfYn+O50ytMgTHU8QYUYN\n8FbkbiO8rQKBgQD99eFNA4QK2ZkfsXfX43Kt4hrWb7wxqq44TPzLFKr8qTm5bmjI\n4ivCbgi4PVaJrDQ5O2/y1ytfO9odoWIRST5a17b/VjNFNjeFE0DFpOT5sA5S/473\nOCmrCCs3dnDDtClGYE9z0iIPgy8aQsFtGOBq1rxvFBZbvX4DyWS5/Gf/NwKBgBCR\nXuKg5Q2ufBIgD1wvBH3tPnigzMF1YDGnNYj1AMLtluWcDyFWwUiTDoYuAE6b/Zd8\nQiMKYve70UwbzGIXQCKV170+LeucpngatAP5eow1ItDBt0zhncrpNVgW9DZj2bpi\nj4nhTitBRXdJyIg4kDhAG8SpDJeYBfJE7PQQFLqxAoGBAOsJCZiAfp0wWtcq/3aJ\nyW8Do6mdH9ZWN2saODHA9IeoCDsyGuQCj+bN8NdnRcFMqRxvnB0slrlG5pR2uCq8\nRo6UQygr6HKR7xgP5XpK19WqJHoVLvD1FeZ1uc8GNK6anT9ROhLCApqI8nXwDsfQ\nvgbV6fsZtxw4JnMiGUWD0PFx\n-----END PRIVATE KEY-----\n",
+  "client_email": "ariana-terapias@ariana-terapias-413420.iam.gserviceaccount.com",
+  "client_id": "104808543528684614799",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/ariana-terapias%40ariana-terapias-413420.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
