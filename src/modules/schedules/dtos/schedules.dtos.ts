@@ -18,6 +18,7 @@ export const schedulesValidationSchema = z.object({
     'reembolsado',
     'concluído',
   ]),
+  google_event_id: z.string().optional(),
   date_creation: z.date().optional(),
   date_update: z.date().optional(),
 });

@@ -11,7 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/modules/users/service/jwt-auth.guard';
-import { GoogleCalendarService } from './google-calendar.service';
+import GoogleCalendarService from './google-calendar.service';
 import { EventData, Event } from './event.interfaces';
 
 @Controller('calendar')

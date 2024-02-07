@@ -3,7 +3,7 @@ import { google } from 'googleapis';
 import { EventData, Event } from './event.interfaces';
 
 @Injectable()
-export class GoogleCalendarService {
+export default class GoogleCalendarService {
   private calendar;
 
   constructor() {

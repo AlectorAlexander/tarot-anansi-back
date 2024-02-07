@@ -5,12 +5,17 @@ import SchedulesService from '../../schedules/service/schedules.service';
 import { IPayments } from '../../payments/dtos/payments.dtos';
 import SessionsService from '../../sessions/service/sessions.service';
 import { ISessions } from '../../sessions/dtos/sessions.dtos';
+import GoogleCalendarService from '../google-calendar/google-calendar.service';
+import { EventData } from '../google-calendar/event.interfaces';
+import { IUser } from 'src/modules/users/dtos/users.dtos';
+import UsersService from 'src/modules/users/service/users.service';
 
 export type IBookingData = {
   scheduleData: ISchedules;
   paymentData: IPayments;
   sessionData: ISessions | string;
   sessionName?: string;
+  userData?: IUser;
 };
 
 @Injectable()
@@ -19,6 +24,8 @@ class BookingService {
     private schedulesService: SchedulesService,
     private paymentService: PaymentService,
     private sessionService: SessionsService,
+    private googleCalendarService: GoogleCalendarService,
+    private userService: UsersService,
   ) {}
 
   async createBooking(data: IBookingData): Promise<IBookingData> {
@@ -30,6 +37,10 @@ class BookingService {
           ? schedule.user_id?.toString()
           : schedule._id;
       const user_id = schedule.user_id.toString();
+
+      const userData = await this.userService.findById(user_id);
+
+      const { name, email } = userData;
 
       const stats = schedule.status === 'pendente' ? 'pendente' : 'cancelado';
 
@@ -44,6 +55,7 @@ class BookingService {
       const payment = await this.paymentService.create(paymentBody, user_id);
       const booking: IBookingData = {
         scheduleData: schedule,
+        userData,
         paymentData: payment,
         sessionData:
           'Pagamento não realizado, portanto a sessão não foi marcada ainda',
@@ -63,6 +75,32 @@ class BookingService {
         };
         const session = await this.sessionService.create(sessionBody);
         booking.sessionData = session;
+        const eventData: EventData = {
+          summary: `Sessão de ${data.sessionName}`,
+          description: `Sessão de ${data.sessionName} agendada para a data ${day}/${month}/${year} às ${hours}:${minutes} - ${name}`,
+          location: 'Online',
+          start: {
+            dateTime: `${year}-${month}-${day}T${hours}:${minutes}:00`,
+            timeZone: 'America/Sao_Paulo',
+          },
+          end: {
+            dateTime: `${year}-${month}-${day}T${hours}:${minutes}:00`,
+            timeZone: 'America/Sao_Paulo',
+          },
+          attendees: [email],
+          reminders: {
+            useDefault: false,
+            overrides: [
+              { method: 'email', minutes: 24 * 60 },
+              { method: 'popup', minutes: 10 },
+              { method: 'popup', minutes: 30 },
+            ],
+          },
+        };
+        const event = await this.googleCalendarService.createEvent(eventData);
+        await this.schedulesService.update(schedule._id, {
+          google_event_id: event.id,
+        });
       }
 
       return booking;
@@ -129,6 +167,7 @@ class BookingService {
       );
       const updatedBooking: IBookingData = {
         scheduleData: updatedSchedule,
+        userData: await this.userService.findById(user_id), // Adding userData here
         paymentData: updatedPayment,
         sessionData:
           'Pagamento não realizado, portanto a sessão não foi marcada ainda',
@@ -185,6 +224,9 @@ class BookingService {
             scheduleData: schedule,
             paymentData: payment,
             sessionData,
+            userData: await this.userService.findById(
+              schedule.user_id.toString(),
+            ), // Adding userData here
           };
         }),
       );

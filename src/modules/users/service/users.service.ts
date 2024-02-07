@@ -5,7 +5,7 @@ import { hash, compare } from 'bcrypt';
 import 'dotenv/config';
 import UserModel from '../entities/users.entity';
 import { SafeParseError } from 'zod';
-import { ConflictException } from '@nestjs/common';
+import { BadRequestException, ConflictException } from '@nestjs/common';
 import { validateToken } from 'src/modules/interfaces/interfaces';
 
 export enum ErrorTypes {
@@ -45,6 +45,25 @@ class UsersService implements IService<IUser> {
       password: hashedPassword,
     });
     return user;
+  }
+
+  public async findById(id: string): Promise<IUser | null> {
+    try {
+      const user = await this._user.readOne(id);
+      if (!user) return null;
+
+      // Convertendo o documento Mongoose para um objeto JavaScript simples
+      const userObject = user.toObject();
+
+      // Omitindo a chave "password" do usuário
+      const { password, ...userWithoutPassword } = userObject;
+      return userWithoutPassword;
+    } catch (error) {
+      throw new BadRequestException({
+        message: 'Failed to find user',
+        details: error.message,
+      });
+    }
   }
 
   public async create(data: IUser): Promise<string> {

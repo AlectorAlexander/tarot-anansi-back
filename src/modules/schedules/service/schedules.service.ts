@@ -6,13 +6,17 @@ import {
 } from './../dtos/schedules.dtos';
 import { IService } from '../../interfaces/IService';
 import NotificationService from '../../notifications/service/notifications.service';
+import GoogleCalendarService from '../../booking/google-calendar/google-calendar.service';
 import { BadRequestException, Injectable } from '@nestjs/common';
 
 @Injectable()
 class SchedulesService implements IService<ISchedules> {
   private _schedule: SchedulesModel;
 
-  constructor(private readonly notificationService: NotificationService) {
+  constructor(
+    private readonly notificationService: NotificationService,
+    private readonly googleCalendarService: GoogleCalendarService,
+  ) {
     this._schedule = new SchedulesModel();
   }
 
