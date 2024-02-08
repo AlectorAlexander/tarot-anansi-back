@@ -109,7 +109,35 @@ class SchedulesService implements IService<ISchedules> {
 
   public async read(): Promise<ISchedules[]> {
     const schedules = await this._schedule.read();
-    return schedules.map((schedule) => schedule);
+    const today = new Date();
+    const thisYear = today.getFullYear();
+    const lastDateOfTheYear = new Date(thisYear, 11, 31);
+    const schedulesFromGoogle = await this.googleCalendarService.listEvents(
+      today,
+      lastDateOfTheYear,
+    );
+
+    // Mapear os eventos do Google para o formato ISchedules
+    const schedulesFromGoogleFormatted: ISchedules[] = schedulesFromGoogle.map(
+      (event) => {
+        const { start, end, id } = event;
+        const startDate = new Date(start.dateTime);
+        const endDate = new Date(end.dateTime);
+        const google_event_id = id;
+        return {
+          _id: '', // Preencher com o ID se necessário
+          user_id: '', // Preencher com o ID do usuário se necessário
+          start_date: startDate,
+          end_date: endDate,
+          google_event_id,
+          status: 'agendado', // Definir o status conforme necessário
+          date_creation: new Date(), // Preencher com a data de criação se necessário
+          date_update: new Date(), // Preencher com a data de atualização se necessário
+        };
+      },
+    );
+
+    return [...schedules, ...schedulesFromGoogleFormatted];
   }
 
   public async readOne(id: string): Promise<ISchedules | null> {
@@ -141,8 +169,35 @@ class SchedulesService implements IService<ISchedules> {
           start_date: { $gte: start_date },
           end_date: { $lte: end_date },
         });
-        if (!schedules) return [];
-        return schedules.map((schedule) => schedule);
+        const schedulesFromGoogle = await this.googleCalendarService.listEvents(
+          start_date,
+          end_date,
+        );
+
+        // Mapear os eventos do Google para o formato ISchedules
+        const schedulesFromGoogleFormatted: ISchedules[] =
+          schedulesFromGoogle.map((event) => {
+            const { start, end, id } = event;
+            const startDate = new Date(start.dateTime);
+            const endDate = new Date(end.dateTime);
+            const google_event_id = id;
+            return {
+              _id: '', // Preencher com o ID se necessário
+              user_id: '', // Preencher com o ID do usuário se necessário
+              start_date: startDate,
+              end_date: endDate,
+              google_event_id,
+              status: 'agendado', // Definir o status conforme necessário
+              date_creation: new Date(), // Preencher com a data de criação se necessário
+              date_update: new Date(), // Preencher com a data de atualização se necessário
+            };
+          });
+
+        if (!schedules.length && !schedulesFromGoogleFormatted.length) {
+          return [];
+        }
+
+        return [...schedules, ...schedulesFromGoogleFormatted];
       } else {
         const startOfDay = new Date(start_date);
         startOfDay.setHours(0, 0, 0, 0);
@@ -153,7 +208,34 @@ class SchedulesService implements IService<ISchedules> {
         const schedules = await this._schedule.read({
           start_date: { $gte: startOfDay, $lte: endOfDay },
         });
-        return schedules.map((schedule) => schedule);
+        const schedulesFromGoogle = await this.googleCalendarService.listEvents(
+          startOfDay,
+          endOfDay,
+        );
+
+        const schedulesFromGoogleFormatted: ISchedules[] =
+          schedulesFromGoogle.map((event) => {
+            const { start, end, id } = event;
+            const startDate = new Date(start.dateTime);
+            const endDate = new Date(end.dateTime);
+            const google_event_id = id;
+            return {
+              _id: '', // Preencher com o ID se necessário
+              user_id: '', // Preencher com o ID do usuário se necessário
+              start_date: startDate,
+              end_date: endDate,
+              google_event_id,
+              status: 'agendado', // Definir o status conforme necessário
+              date_creation: new Date(), // Preencher com a data de criação se necessário
+              date_update: new Date(), // Preencher com a data de atualização se necessário
+            };
+          });
+
+        if (!schedules.length && !schedulesFromGoogleFormatted.length) {
+          return [];
+        }
+
+        return [...schedules, ...schedulesFromGoogleFormatted];
       }
     } catch (error) {
       throw error;
