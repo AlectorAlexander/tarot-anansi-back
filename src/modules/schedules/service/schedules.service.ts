@@ -247,21 +247,63 @@ class SchedulesService implements IService<ISchedules> {
     data: ISchedules,
   ): Promise<ISchedules | null> {
     try {
-      schedulesValidationSchema.safeParse(data);
-      const updatedSchedule = await this._schedule.update(id, data);
-      if (updatedSchedule) {
-        await this.createAndSendNotification(updatedSchedule);
-      }
-      return updatedSchedule || null;
-    } catch (error) {
-      console.log(error);
+      const existingSchedule = await this._schedule.readOne(id);
+      if (!existingSchedule)
+        throw new BadRequestException('Schedule not found');
 
+      // Atualiza o agendamento local
+      const updatedSchedule = await this._schedule.update(id, data);
+
+      // Atualiza o evento no Google Calendar, se existir
+      if (existingSchedule.google_event_id) {
+        const googleEvent = await this.googleCalendarService.getEventById(
+          existingSchedule.google_event_id,
+        );
+        await this.googleCalendarService.updateEvent(
+          existingSchedule.google_event_id,
+          {
+            summary: googleEvent.summary,
+            description: googleEvent.description,
+            location: googleEvent.location,
+            start: {
+              dateTime:
+                existingSchedule.start_date !== updatedSchedule.start_date
+                  ? String(updatedSchedule.start_date)
+                  : googleEvent.start.dateTime,
+              timeZone: googleEvent.start.timeZone,
+            },
+            end: {
+              dateTime:
+                existingSchedule.end_date !== updatedSchedule.end_date
+                  ? String(updatedSchedule.end_date)
+                  : googleEvent.end.dateTime,
+              timeZone: googleEvent.end.timeZone,
+            },
+            attendees: googleEvent.attendees,
+            reminders: googleEvent.reminders,
+          },
+        );
+      }
+
+      // Envio de notificação sobre a atualização
+      await this.createAndSendNotification(updatedSchedule);
+      return updatedSchedule;
+    } catch (error) {
       throw error;
     }
   }
 
   public async delete(id: string): Promise<ISchedules | null> {
     try {
+      const existingSchedule = await this._schedule.readOne(id);
+      if (!existingSchedule)
+        throw new BadRequestException('Schedule not found');
+
+      if (existingSchedule.google_event_id) {
+        this.googleCalendarService.deleteEvent(
+          existingSchedule.google_event_id,
+        );
+      }
       const deletedSchedule = await this._schedule.delete(id);
       return deletedSchedule || null;
     } catch (error) {

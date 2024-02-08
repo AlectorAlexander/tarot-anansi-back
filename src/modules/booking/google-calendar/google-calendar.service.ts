@@ -28,6 +28,19 @@ export default class GoogleCalendarService {
     }
   }
 
+  async getEventById(eventId: string): Promise<Event> {
+    try {
+      const event = await this.calendar.events.get({
+        calendarId: process.env.CALENDAR_ID,
+        eventId: eventId,
+      });
+
+      return event.data as Event;
+    } catch (error) {
+      throw new Error(`Failed to get event by ID: ${error.message}`);
+    }
+  }
+
   async listEvents(timeMin: Date, timeMax: Date): Promise<Event[]> {
     try {
       const events = await this.calendar.events.list({
