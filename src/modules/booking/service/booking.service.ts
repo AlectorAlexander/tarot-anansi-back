@@ -16,6 +16,7 @@ export type IBookingData = {
   sessionData: ISessions | string;
   sessionName?: string;
   userData?: IUser;
+  phoneNumber?: string;
 };
 
 @Injectable()
@@ -30,7 +31,7 @@ class BookingService {
 
   async createBooking(data: IBookingData): Promise<IBookingData> {
     try {
-      const { scheduleData, paymentData } = data;
+      const { scheduleData, paymentData, phoneNumber } = data;
       const schedule = await this.schedulesService.create(scheduleData);
       const schedule_id =
         typeof schedule._id !== 'string'
@@ -70,14 +71,14 @@ class BookingService {
 
         const sessionBody = {
           schedule_id: schedule_id,
-          date: `Nova sessão de ${data.sessionName} agendada para a data ${day}/${month}/${year} às ${hours}:${minutes}`,
+          date: `Nova sessão de ${data.sessionName} agendada para a data ${day}/${month}/${year} às ${hours}:${minutes} com o cliente ${name}. Email: ${email}. Telefone: ${phoneNumber}`,
           price: paymentData.price,
         };
         const session = await this.sessionService.create(sessionBody);
         booking.sessionData = session;
         const eventData: EventData = {
           summary: `Sessão de ${data.sessionName}`,
-          description: `Sessão de ${data.sessionName} agendada para a data ${day}/${month}/${year} às ${hours}:${minutes} - ${name}`,
+          description: `Sessão de ${data.sessionName} agendada para a data ${day}/${month}/${year} às ${hours}:${minutes} - Cliente: ${name} - Telefone: ${phoneNumber}`,
           location: 'Online',
           start: {
             dateTime: `${year}-${month}-${day}T${hours}:${minutes}:00`,
