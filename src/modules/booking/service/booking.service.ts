@@ -33,10 +33,7 @@ class BookingService {
     try {
       const { scheduleData, paymentData, phoneNumber } = data;
       const schedule = await this.schedulesService.create(scheduleData);
-      const schedule_id =
-        typeof schedule._id !== 'string'
-          ? schedule.user_id?.toString()
-          : schedule._id;
+      const schedule_id = schedule._id.toString();
       const user_id = schedule.user_id.toString();
 
       const userData = await this.userService.findById(user_id);
@@ -231,6 +228,55 @@ class BookingService {
           };
         }),
       );
+      return bookings;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async findAllBookingsForAdmin(): Promise<IBookingData[]> {
+    try {
+      const schedules = await this.schedulesService.read();
+      const bookings: IBookingData[] = [];
+
+      for (const schedule of schedules) {
+        // Verifica se schedule.user_id é válido
+        if (!schedule.user_id || schedule.user_id === '') {
+          continue;
+        }
+
+        try {
+          const user = await this.userService.findById(
+            schedule.user_id.toString(),
+          );
+
+          if (user) {
+            const payment = await this.paymentService.findByScheduleId(
+              schedule._id.toString(),
+            );
+            const session = await this.sessionService.findByScheduleId(
+              schedule._id.toString(),
+            );
+            console.log({ session, payment });
+
+            const sessionData = session
+              ? session
+              : 'Sessão ainda não definida ou pagamento pendente';
+
+            const bookingData: IBookingData = {
+              scheduleData: schedule,
+              paymentData: payment,
+              sessionData: sessionData,
+              userData: user,
+            };
+
+            bookings.push(bookingData);
+          }
+        } catch (error) {
+          console.error(error);
+          continue;
+        }
+      }
       return bookings;
     } catch (error) {
       throw error;

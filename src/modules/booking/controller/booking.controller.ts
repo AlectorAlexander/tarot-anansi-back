@@ -55,6 +55,23 @@ export class BookingController {
     }
   }
 
+  @Get('all')
+  @UseGuards(JwtAuthGuard)
+  async getAllBookings() {
+    console.log('chamou aqui');
+
+    try {
+      const bookings = await this.bookingService.findAllBookingsForAdmin();
+      return bookings;
+    } catch (error) {
+      console.log(error.message);
+      throw new NotFoundException({
+        message: 'Failed to find bookings',
+        details: error.message,
+      });
+    }
+  }
+
   @Get()
   @UseGuards(JwtAuthGuard)
   async findBookingByUserId(@Request() req: any) {

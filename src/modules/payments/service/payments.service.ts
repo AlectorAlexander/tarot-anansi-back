@@ -77,9 +77,7 @@ class PaymentService implements IService<IPayments> {
   public async read(): Promise<IPayments[]> {
     try {
       const paymentsFromDB = await this._payments.read();
-      const payments = paymentsFromDB.map((payment) => ({
-        ...payment,
-      }));
+      const payments = paymentsFromDB.map((payment) => payment.toObject());
 
       payments.sort(this.sortByDateCreation);
 
@@ -103,6 +101,7 @@ class PaymentService implements IService<IPayments> {
       const payment = await this._payments.read({
         schedule_id: scheduleId,
       });
+      console.log(payment);
 
       return payment[0];
     } catch (error) {

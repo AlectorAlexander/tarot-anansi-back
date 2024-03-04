@@ -20,22 +20,15 @@ export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
   @Get()
-  @UseGuards(JwtAuthGuard)
-  /* async read(@Request() req: any): Promise<IPayments[]> {
+  async read(@Request() req: any): Promise<IPayments[]> {
     try {
-      const role = req.user.role;
-      if (role === 'admin') {
-        const payment = await this.paymentService.read();
-        return payment;
-      } else {
-        const userId = req.user.id;
-        const payment = await this.paymentService.findByScheduleId(userId);
-        return payment;
-      }
+      const payment = await this.paymentService.read();
+      return payment;
     } catch (error) {
       throw new NotFoundException('No payment found');
     }
-  } */
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   async readOne(@Param('id') id: string): Promise<IPayments> {
