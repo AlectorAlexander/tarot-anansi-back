@@ -53,6 +53,10 @@ export default class GoogleCalendarService {
 
       return events.data.items as Event[];
     } catch (error) {
+      if (error.message.includes('invalid_grant')) {
+        console.warn(`Google Calendar access issue: ${error.message}`);
+        return []; // Retorna um array vazio para permitir a continuação
+      }
       throw new Error(`Failed to list events: ${error.message}`);
     }
   }

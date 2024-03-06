@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { SafeParseError } from 'zod';
 import SchedulesModel from '../entities/schedules.entity';
 import {
@@ -125,14 +126,14 @@ class SchedulesService implements IService<ISchedules> {
         const endDate = new Date(end.dateTime);
         const google_event_id = id;
         return {
-          _id: '', // Preencher com o ID se necessário
-          user_id: '', // Preencher com o ID do usuário se necessário
+          _id: '',
+          user_id: '', 
           start_date: startDate,
           end_date: endDate,
           google_event_id,
-          status: 'agendado', // Definir o status conforme necessário
-          date_creation: new Date(), // Preencher com a data de criação se necessário
-          date_update: new Date(), // Preencher com a data de atualização se necessário
+          status: 'agendado', 
+          date_creation: new Date(), 
+          date_update: new Date(), 
         };
       },
     );

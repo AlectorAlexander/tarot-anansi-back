@@ -14,7 +14,6 @@ import {
 import { ISchedules } from '../dtos/schedules.dtos';
 import SchedulesService from '../service/schedules.service';
 import { JwtAuthGuard } from 'src/modules/users/service/jwt-auth.guard';
-import { log } from 'console';
 
 @Controller('schedules')
 export class SchedulesController {
@@ -25,12 +24,16 @@ export class SchedulesController {
     @Body() dates: { start_date: Date; end_date?: Date },
   ): Promise<ISchedules[]> {
     try {
+      console.log(dates);
       const schedules = await this.schedulesService.findByDate(
         dates.start_date,
         dates.end_date,
       );
+      console.log(schedules);
       return schedules;
     } catch (error) {
+      console.log(error);
+
       throw new NotFoundException('No schedules found for this date');
     }
   }
