@@ -165,7 +165,7 @@ class BookingService {
       );
       const updatedBooking: IBookingData = {
         scheduleData: updatedSchedule,
-        userData: await this.userService.findById(user_id), // Adding userData here
+        userData: await this.userService.findById(user_id),
         paymentData: updatedPayment,
         sessionData:
           'Pagamento não realizado, portanto a sessão não foi marcada ainda',
