@@ -24,12 +24,10 @@ export class SchedulesController {
     @Body() dates: { start_date: Date; end_date?: Date },
   ): Promise<ISchedules[]> {
     try {
-      console.log(dates);
       const schedules = await this.schedulesService.findByDate(
         dates.start_date,
         dates.end_date,
       );
-      console.log(schedules);
       return schedules;
     } catch (error) {
       console.log(error);

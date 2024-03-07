@@ -121,8 +121,6 @@ export class ProductController {
   ): Promise<IProduct> {
     try {
       const role = req.user.role;
-      console.log({ role, id, data });
-
       if (role === 'admin' || secret === process.env.APP_SECRET_KEY) {
         const updatedProduct = await this.productService.update(id, data);
         if (!updatedProduct) {

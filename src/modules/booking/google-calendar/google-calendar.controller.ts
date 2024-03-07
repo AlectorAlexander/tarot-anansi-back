@@ -37,7 +37,6 @@ export class GoogleCalendarController {
     @Param('timeMax') timeMax: string,
   ): Promise<Event[]> {
     try {
-      console.log({ timeMin, timeMax });
       const parsedTimeMin = new Date(timeMin);
       const parsedTimeMax = new Date(timeMax);
       const events = await this.googleCalendarService.listEvents(

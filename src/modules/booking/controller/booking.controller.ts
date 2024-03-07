@@ -58,8 +58,6 @@ export class BookingController {
   @Get('all')
   @UseGuards(JwtAuthGuard)
   async getAllBookings() {
-    console.log('chamou aqui');
-
     try {
       const bookings = await this.bookingService.findAllBookingsForAdmin();
       return bookings;
@@ -98,12 +96,15 @@ export class BookingController {
     @Body() data: IBookingData,
   ): Promise<IBookingData> {
     try {
+      console.log(data);
       const updatedBooking = await this.bookingService.updateBooking(
         scheduleId,
         data,
       );
       return updatedBooking;
     } catch (error) {
+      console.log(error);
+
       throw new BadRequestException({
         message: 'Failed to update booking',
         details: error.message,

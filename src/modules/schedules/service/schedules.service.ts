@@ -21,34 +21,28 @@ class SchedulesService implements IService<ISchedules> {
     this._schedule = new SchedulesModel();
   }
 
-  private async createAndSendNotification(data: ISchedules): Promise<void> {
+  private async createAndSendNotification(data: ISchedules, action: 'created' | 'updated' | 'cancelled'): Promise<void> {
     const { user_id, start_date, status } = data;
-    const start_date_formatted = new Date(start_date).toLocaleDateString(
-      'pt-BR',
-      {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-      },
-    );
-
-    const start_time_formatted = new Date(start_date).toLocaleTimeString(
-      'pt-BR',
-      {
-        hour: '2-digit',
-        minute: '2-digit',
-      },
-    );
-
+    const start_date_formatted = new Date(start_date).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  
+    const start_time_formatted = new Date(start_date).toLocaleTimeString('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  
     let message = '';
-    if (status === 'agendado') {
-      message = `Seu agendamento foi marcado para o dia ${start_date_formatted} às ${start_time_formatted}`;
-    } else if (status === 'cancelado') {
-      message = `Seu agendamento para o dia ${start_date_formatted} às ${start_time_formatted} foi cancelado`;
-    } else if (status === 'pendente') {
-      message = `O pagamento de sua seção para o dia ${start_date_formatted} às ${start_time_formatted}, ainda consta como pendente. Portanto, o agendamento ainda não está confirmado`;
+    if (action === 'created') {
+      message = `Seu agendamento foi marcado para o dia ${start_date_formatted} às ${start_time_formatted}.`;
+    } else if (action === 'cancelled') {
+      message = `Seu agendamento para o dia ${start_date_formatted} às ${start_time_formatted} foi cancelado.`;
+    } else if (action === 'updated') {
+      message = `Seu agendamento foi reagendado para o dia ${start_date_formatted} às ${start_time_formatted}.`;
     }
-
+  
     if (message !== '') {
       await this.notificationService.create({
         user_id,
@@ -56,6 +50,7 @@ class SchedulesService implements IService<ISchedules> {
       });
     }
   }
+  
 
   private async validateDataAndCreate(data: ISchedules): Promise<ISchedules> {
     const parsed = schedulesValidationSchema.safeParse(data);
@@ -67,7 +62,7 @@ class SchedulesService implements IService<ISchedules> {
       throw new Error(`${errorMessage} (code: ${codeMessage})`);
     }
     const schedule = await this._schedule.create(data);
-    await this.createAndSendNotification(schedule);
+    await this.createAndSendNotification(schedule, 'created');
     return schedule;
   }
 
@@ -260,6 +255,8 @@ class SchedulesService implements IService<ISchedules> {
         const googleEvent = await this.googleCalendarService.getEventById(
           existingSchedule.google_event_id,
         );
+        const startDateTime = updatedSchedule.start_date.toISOString();
+        const endDateTime = updatedSchedule.end_date.toISOString();
         await this.googleCalendarService.updateEvent(
           existingSchedule.google_event_id,
           {
@@ -267,17 +264,11 @@ class SchedulesService implements IService<ISchedules> {
             description: googleEvent.description,
             location: googleEvent.location,
             start: {
-              dateTime:
-                existingSchedule.start_date !== updatedSchedule.start_date
-                  ? String(updatedSchedule.start_date)
-                  : googleEvent.start.dateTime,
+              dateTime: startDateTime,
               timeZone: googleEvent.start.timeZone,
             },
             end: {
-              dateTime:
-                existingSchedule.end_date !== updatedSchedule.end_date
-                  ? String(updatedSchedule.end_date)
-                  : googleEvent.end.dateTime,
+              dateTime: endDateTime,
               timeZone: googleEvent.end.timeZone,
             },
             attendees: googleEvent.attendees,
@@ -286,8 +277,7 @@ class SchedulesService implements IService<ISchedules> {
         );
       }
 
-      // Envio de notificação sobre a atualização
-      await this.createAndSendNotification(updatedSchedule);
+      await this.createAndSendNotification(updatedSchedule, 'updated');
       return updatedSchedule;
     } catch (error) {
       throw error;

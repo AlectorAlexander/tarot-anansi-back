@@ -257,7 +257,6 @@ class BookingService {
             const session = await this.sessionService.findByScheduleId(
               schedule._id.toString(),
             );
-            console.log({ session, payment });
 
             const sessionData = session
               ? session

@@ -101,7 +101,6 @@ class PaymentService implements IService<IPayments> {
       const payment = await this._payments.read({
         schedule_id: scheduleId,
       });
-      console.log(payment);
 
       return payment[0];
     } catch (error) {
@@ -114,7 +113,6 @@ class PaymentService implements IService<IPayments> {
     data: IPayments,
     user_id?: string,
   ): Promise<IPayments> {
-    console.log(data);
     const parsed = paymentsValidationSchema.safeParse(data);
     if (!parsed.success) {
       const errorDetails = parsed as SafeParseError<IPayments>;

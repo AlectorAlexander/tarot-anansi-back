@@ -71,6 +71,8 @@ export default class GoogleCalendarService {
 
       return event.data as Event;
     } catch (error) {
+      console.log(error);
+
       throw new Error(`Failed to update event: ${error.message}`);
     }
   }

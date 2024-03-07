@@ -142,8 +142,6 @@ export class PostController {
     try {
       const role = req.user.role;
       if (role === 'admin') {
-        console.log('chamou');
-
         const deletedPost = await this.PostService.delete(id);
         if (!deletedPost) {
           throw new NotFoundException('post not found');
