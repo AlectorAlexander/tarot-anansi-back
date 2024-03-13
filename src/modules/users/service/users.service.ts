@@ -203,28 +203,36 @@ class UsersService implements IService<IUser> {
     google_id: string;
     email: string;
     name: string;
+    phone: string;
     profile_photo?: string;
   }): Promise<string> {
-    const existingUser = await this._user.readOneByEmail(data.email);
-    if (existingUser) {
-      if (existingUser.google_id !== data.google_id) {
-        // O front depende da seguinte mensagem de erro pra trata-lo corretamente.
-        throw new Error('Email already registered without Google.');
+    try {
+      console.log(data);
+      const existingUser = await this._user.readOneByEmail(data.email);
+      if (existingUser) {
+        if (existingUser.google_id !== data.google_id) {
+          // O front depende da seguinte mensagem de erro pra trata-lo corretamente.
+          throw new Error('Email already registered without Google.');
+        }
+        return sign(
+          { id: existingUser._id, role: existingUser.role },
+          JWT_SECRET,
+          jwtConfig,
+        );
+      } else {
+        const user = await this._user.create({
+          role: 'user',
+          email: data.email,
+          name: data.name,
+          google_id: data.google_id,
+          profile_photo: data.profile_photo,
+          phone: data.phone,
+        });
+        return sign({ id: user._id, role: user.role }, JWT_SECRET, jwtConfig);
       }
-      return sign(
-        { id: existingUser._id, role: existingUser.role },
-        JWT_SECRET,
-        jwtConfig,
-      );
-    } else {
-      const user = await this._user.create({
-        role: 'user',
-        email: data.email,
-        name: data.name,
-        google_id: data.google_id,
-        profile_photo: data.profile_photo,
-      });
-      return sign({ id: user._id, role: user.role }, JWT_SECRET, jwtConfig);
+    } catch (error) {
+      console.error(error);
+      throw error;
     }
   }
 }

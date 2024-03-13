@@ -24,6 +24,8 @@ export class BookingController {
     @Body() data: IBookingData,
   ): Promise<IBookingData> {
     try {
+      console.log('chamou aqui');
+
       if (!data.scheduleData || !data.paymentData) {
         throw new BadRequestException({
           message: 'Missing scheduleData or paymentData',
@@ -45,9 +47,12 @@ export class BookingController {
           details: 'Booking creation returned null',
         });
       }
+      console.log({ booking });
 
       return booking;
     } catch (error) {
+      console.log(error);
+
       throw new BadRequestException({
         message: error.message || 'Failed to create booking',
         details: error.message,
@@ -96,7 +101,6 @@ export class BookingController {
     @Body() data: IBookingData,
   ): Promise<IBookingData> {
     try {
-      console.log(data);
       const updatedBooking = await this.bookingService.updateBooking(
         scheduleId,
         data,

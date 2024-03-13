@@ -247,6 +247,12 @@ class SchedulesService implements IService<ISchedules> {
       if (!existingSchedule)
         throw new BadRequestException('Schedule not found');
 
+      // Verifica se as datas foram alteradas
+      
+      const isStartDateChanged = !data.start_date || existingSchedule.start_date.getTime() !== data.start_date.getTime();
+      const isEndDateChanged = !data.end_date || existingSchedule.end_date.getTime() !== data.end_date.getTime();
+      const isDateChanged = isStartDateChanged || isEndDateChanged;
+
       // Atualiza o agendamento local
       const updatedSchedule = await this._schedule.update(id, data);
 
@@ -277,12 +283,17 @@ class SchedulesService implements IService<ISchedules> {
         );
       }
 
-      await this.createAndSendNotification(updatedSchedule, 'updated');
+      // Chama createAndSendNotification somente se houve alteração na data
+      if (isDateChanged) {
+        await this.createAndSendNotification(updatedSchedule, 'updated');
+      }
+
       return updatedSchedule;
     } catch (error) {
       throw error;
     }
   }
+
 
   public async delete(id: string): Promise<ISchedules | null> {
     try {

@@ -16,7 +16,6 @@ export type IBookingData = {
   sessionData: ISessions | string;
   sessionName?: string;
   userData?: IUser;
-  phoneNumber?: string;
 };
 
 @Injectable()
@@ -31,14 +30,14 @@ class BookingService {
 
   async createBooking(data: IBookingData): Promise<IBookingData> {
     try {
-      const { scheduleData, paymentData, phoneNumber } = data;
+      const { scheduleData, paymentData } = data;
       const schedule = await this.schedulesService.create(scheduleData);
       const schedule_id = schedule._id.toString();
       const user_id = schedule.user_id.toString();
 
       const userData = await this.userService.findById(user_id);
 
-      const { name, email } = userData;
+      const { name, email, phone } = userData;
 
       const stats = schedule.status === 'pendente' ? 'pendente' : 'cancelado';
 
@@ -61,21 +60,23 @@ class BookingService {
       if (payment.status === 'pago') {
         const startDate = new Date(scheduleData.start_date);
         const day = String(startDate.getDate()).padStart(2, '0');
-        const month = String(startDate.getMonth() + 1).padStart(2, '0'); // +1 porque os meses começam em 0
+        const month = String(startDate.getMonth() + 1).padStart(2, '0');
         const year = startDate.getFullYear();
         const hours = String(startDate.getHours()).padStart(2, '0');
         const minutes = String(startDate.getMinutes()).padStart(2, '0');
 
         const sessionBody = {
           schedule_id: schedule_id,
-          date: `Nova sessão de ${data.sessionName} agendada para a data ${day}/${month}/${year} às ${hours}:${minutes} com o cliente ${name}. Email: ${email}. Telefone: ${phoneNumber}`,
+          date: `Nova sessão de ${data.sessionName} agendada para a data ${day}/${month}/${year} às ${hours}:${minutes} com o cliente ${name}. Email: ${email}. Telefone: ${phone}`,
           price: paymentData.price,
         };
         const session = await this.sessionService.create(sessionBody);
+        console.log({ session });
+
         booking.sessionData = session;
         const eventData: EventData = {
           summary: `Sessão de ${data.sessionName}`,
-          description: `Sessão de ${data.sessionName} agendada para a data ${day}/${month}/${year} às ${hours}:${minutes} - Cliente: ${name} - Telefone: ${phoneNumber}`,
+          description: `Sessão de ${data.sessionName} agendada para a data ${day}/${month}/${year} às ${hours}:${minutes} - Cliente: ${name} - Telefone: ${phone}`,
           location: 'Online',
           start: {
             dateTime: `${year}-${month}-${day}T${hours}:${minutes}:00`,
@@ -112,6 +113,8 @@ class BookingService {
       const schedule = await this.schedulesService.readOne(scheduleId);
       const payment = await this.paymentService.findByScheduleId(scheduleId);
       const session = await this.sessionService.findByScheduleId(scheduleId);
+      const user_id = schedule.user_id.toString();
+      const userData = await this.userService.findById(user_id);
       const sessionData = session
         ? session
         : 'Pagamento não realizado, portanto a sessão não foi marcada ainda';
@@ -119,6 +122,7 @@ class BookingService {
         scheduleData: schedule,
         paymentData: payment,
         sessionData,
+        userData,
       };
       return booking;
     } catch (error) {
@@ -128,14 +132,17 @@ class BookingService {
 
   async updateBooking(
     scheduleId: string,
-    { scheduleData }: IBookingData,
+    { scheduleData, sessionName }: IBookingData,
   ): Promise<IBookingData> {
     try {
       const {
         scheduleData: existingSchedule,
         paymentData: existingPayment,
         sessionData: existingsession,
+        userData: existingUser,
       } = await this.findBookingByScheduleId(scheduleId);
+
+      const { name, email, phone } = existingUser;
 
       if (!existingSchedule) {
         throw new Error('Existing schedule not found');
@@ -181,7 +188,7 @@ class BookingService {
 
         const sessionBody = {
           schedule_id: scheduleId,
-          date: `A sessão com este usuário está marcada para a data ${day}/${month}/${year} às ${hours}:${minutes}`,
+          date: `Nova sessão de ${sessionName} reagendada para a data ${day}/${month}/${year} às ${hours}:${minutes} com o cliente ${name}. Email: ${email}. Telefone: ${phone}`,
           price: updatedPayment.price,
         };
 

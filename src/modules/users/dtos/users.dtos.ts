@@ -1,5 +1,16 @@
 import { z } from 'zod';
 
+// Expressão regular para validar números de telefone no formato (XX) XXXXX-XXXX
+const phoneRegExp = /^\(\d{2}\) \d{5}-\d{4}$/;
+
+// Função de validação personalizada para números de telefone
+const phoneNumberValidator = (value: string) => {
+  if (!phoneRegExp.test(value)) {
+    throw new Error('Número de telefone inválido');
+  }
+  return value;
+};
+
 export const userValidationSchema = z.object({
   _id: z
     .string()
@@ -16,6 +27,12 @@ export const userValidationSchema = z.object({
   profile_photo: z.string().optional(),
   google_id: z.string().optional(),
   facebook_id: z.string().optional(),
+  phone: z
+    .string()
+    .refine(phoneNumberValidator, {
+      message: 'Número de telefone inválido',
+    })
+    .optional(), // Adicionando validação para número de telefone
   date_creation: z.date().optional(),
   date_update: z.date().optional(),
 });

@@ -118,6 +118,7 @@ export class UsersController {
       email: string;
       name: string;
       profile_photo?: string;
+      phone: string;
     },
   ): Promise<string> {
     try {
