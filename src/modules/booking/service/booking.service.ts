@@ -28,6 +28,38 @@ class BookingService {
     private userService: UsersService,
   ) {}
 
+  async deleteBooking(
+    paymentId: string,
+    sessionId: string,
+    scheduleId: string,
+  ): Promise<IBookingData | null> {
+    try {
+      const payment = await this.paymentService.delete(paymentId);
+      if (!payment) {
+        throw new Error('Failed to delete payment');
+      }
+
+      const session = await this.sessionService.delete(sessionId);
+      if (!session) {
+        throw new Error('Failed to delete session');
+      }
+
+      const schedule = await this.schedulesService.delete(scheduleId);
+      if (!schedule) {
+        throw new Error('Failed to delete schedule');
+      }
+
+      return {
+        scheduleData: schedule,
+        paymentData: payment,
+        sessionData: session,
+      };
+    } catch (error) {
+      console.error('Error deleting booking:', error.message);
+      throw new Error('Failed to delete booking');
+    }
+  }
+
   async createBooking(data: IBookingData): Promise<IBookingData> {
     try {
       const { scheduleData, paymentData } = data;

@@ -24,8 +24,6 @@ export class BookingController {
     @Body() data: IBookingData,
   ): Promise<IBookingData> {
     try {
-      console.log('chamou aqui');
-
       if (!data.scheduleData || !data.paymentData) {
         throw new BadRequestException({
           message: 'Missing scheduleData or paymentData',
@@ -67,9 +65,32 @@ export class BookingController {
       const bookings = await this.bookingService.findAllBookingsForAdmin();
       return bookings;
     } catch (error) {
-      console.log(error.message);
+      console.log({ Booking_GetAll_70: error.message });
       throw new NotFoundException({
         message: 'Failed to find bookings',
+        details: error.message,
+      });
+    }
+  }
+
+  @Post('Delete')
+  @UseGuards(JwtAuthGuard)
+  async deleteBooking(
+    @Body() data: { paymentId: string; sessionId: string; scheduleId: string },
+  ) {
+    try {
+      const { paymentId, sessionId, scheduleId } = data;
+      const deletedBooking = await this.bookingService.deleteBooking(
+        paymentId,
+        sessionId,
+        scheduleId,
+      );
+
+      return deletedBooking;
+    } catch (error) {
+      console.error('Error deleting booking:', error.message);
+      throw new BadRequestException({
+        message: error.message || 'Failed to delete booking',
         details: error.message,
       });
     }

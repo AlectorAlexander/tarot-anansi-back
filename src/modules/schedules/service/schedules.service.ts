@@ -40,7 +40,7 @@ class SchedulesService implements IService<ISchedules> {
     } else if (action === 'cancelled') {
       message = `Seu agendamento para o dia ${start_date_formatted} às ${start_time_formatted} foi cancelado.`;
     } else if (action === 'updated') {
-      message = `Seu agendamento foi reagendado para o dia ${start_date_formatted} às ${start_time_formatted}.`;
+      message = `Sua sessão foi reagendada para o dia ${start_date_formatted} às ${start_time_formatted}.`;
     }
   
     if (message !== '') {
@@ -113,6 +113,10 @@ class SchedulesService implements IService<ISchedules> {
       lastDateOfTheYear,
     );
 
+    if (!schedulesFromGoogle || schedulesFromGoogle.length === 0) {
+      return schedules;
+    }
+
     // Mapear os eventos do Google para o formato ISchedules
     const schedulesFromGoogleFormatted: ISchedules[] = schedulesFromGoogle.map(
       (event) => {
@@ -169,9 +173,9 @@ class SchedulesService implements IService<ISchedules> {
           start_date,
           end_date,
         );
+        if (schedulesFromGoogle && schedulesFromGoogle.length > 0) {
 
-        // Mapear os eventos do Google para o formato ISchedules
-        const schedulesFromGoogleFormatted: ISchedules[] =
+          const schedulesFromGoogleFormatted: ISchedules[] =
           schedulesFromGoogle.map((event) => {
             const { start, end, id } = event;
             const startDate = new Date(start.dateTime);
@@ -189,11 +193,17 @@ class SchedulesService implements IService<ISchedules> {
             };
           });
 
-        if (!schedules.length && !schedulesFromGoogleFormatted.length) {
-          return [];
+
+
+          if (!schedules.length && !schedulesFromGoogleFormatted.length) {
+            return [];
+          }
+
+          return [...schedules, ...schedulesFromGoogleFormatted];
+        } else {
+          return schedules;
         }
 
-        return [...schedules, ...schedulesFromGoogleFormatted];
       } else {
         const startOfDay = new Date(start_date);
         startOfDay.setHours(0, 0, 0, 0);
@@ -209,7 +219,10 @@ class SchedulesService implements IService<ISchedules> {
           endOfDay,
         );
 
-        const schedulesFromGoogleFormatted: ISchedules[] =
+        if (schedulesFromGoogle) {
+
+
+          const schedulesFromGoogleFormatted: ISchedules[] =
           schedulesFromGoogle.map((event) => {
             const { start, end, id } = event;
             const startDate = new Date(start.dateTime);
@@ -227,11 +240,14 @@ class SchedulesService implements IService<ISchedules> {
             };
           });
 
-        if (!schedules.length && !schedulesFromGoogleFormatted.length) {
-          return [];
-        }
+          if (!schedules.length && !schedulesFromGoogleFormatted.length) {
+            return [];
+          }
 
-        return [...schedules, ...schedulesFromGoogleFormatted];
+          return [...schedules, ...schedulesFromGoogleFormatted];
+        } else {
+          return schedules;
+        }
       }
     } catch (error) {
       throw error;
@@ -247,10 +263,12 @@ class SchedulesService implements IService<ISchedules> {
       if (!existingSchedule)
         throw new BadRequestException('Schedule not found');
 
-      // Verifica se as datas foram alteradas
+
+      console.log({el1: data.start_date, el2: existingSchedule.start_date});
       
-      const isStartDateChanged = !data.start_date || existingSchedule.start_date.getTime() !== data.start_date.getTime();
-      const isEndDateChanged = !data.end_date || existingSchedule.end_date.getTime() !== data.end_date.getTime();
+      
+      const isStartDateChanged = !data.start_date || existingSchedule.start_date.toString() !== data.start_date.toString();
+      const isEndDateChanged = !data.end_date || existingSchedule.end_date.toString() !== data.end_date.toString();
       const isDateChanged = isStartDateChanged || isEndDateChanged;
 
       // Atualiza o agendamento local
@@ -261,6 +279,13 @@ class SchedulesService implements IService<ISchedules> {
         const googleEvent = await this.googleCalendarService.getEventById(
           existingSchedule.google_event_id,
         );
+        if (!googleEvent) {
+          if (isDateChanged) {
+            await this.createAndSendNotification(updatedSchedule, 'updated');
+          }
+          return updatedSchedule;
+        }
+        
         const startDateTime = updatedSchedule.start_date.toISOString();
         const endDateTime = updatedSchedule.end_date.toISOString();
         await this.googleCalendarService.updateEvent(

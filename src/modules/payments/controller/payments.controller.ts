@@ -47,18 +47,20 @@ export class PaymentController {
   @UseGuards(JwtAuthGuard)
   async update(
     @Param('id') id: string,
-    @Body() notificationUpdates: IPayments,
+    @Body() paymentUpdates: IPayments,
   ): Promise<IPayments> {
     try {
       const updatedNotification = await this.paymentService.update(
         id,
-        notificationUpdates,
+        paymentUpdates,
       );
       if (!updatedNotification) {
         throw new NotFoundException('Notification not found');
       }
       return updatedNotification;
     } catch (error) {
+      console.log(error);
+
       throw new BadRequestException({
         message: 'Failed to update notification',
         details: error.message,

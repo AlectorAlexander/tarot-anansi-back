@@ -17,9 +17,10 @@ export const paymentsValidationSchema = z.object({
   _id: idSchema.optional(),
   schedule_id: idSchema.optional(),
   price: z.number().min(0.01).max(999999.99).optional(),
-  status: z.enum(['pendente', 'pago', 'cancelado', 'reembolsado']),
+  status: z.enum(['pendente', 'pago', 'cancelado', 'reembolsado']).optional(),
   date_creation: z.date().optional(),
   date_update: z.date().optional(),
+  paymentIntentId: z.string().optional(),
 });
 
 export type IPayments = z.infer<typeof paymentsValidationSchema>;

@@ -37,6 +37,10 @@ export default class GoogleCalendarService {
 
       return event.data as Event;
     } catch (error) {
+      if (error.message.includes('invalid_grant')) {
+        console.warn(`Google Calendar access issue: ${error.message}`);
+        return;
+      }
       throw new Error(`Failed to get event by ID: ${error.message}`);
     }
   }
@@ -71,8 +75,11 @@ export default class GoogleCalendarService {
 
       return event.data as Event;
     } catch (error) {
-      console.log(error);
-
+      console.log(error.message);
+      if (error.message.includes('invalid_grant')) {
+        console.warn(`Google Calendar access issue: ${error.message}`);
+        return eventData as Event;
+      }
       throw new Error(`Failed to update event: ${error.message}`);
     }
   }

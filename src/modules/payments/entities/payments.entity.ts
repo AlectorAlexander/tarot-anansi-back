@@ -4,6 +4,7 @@ import { IPayments } from '../dtos/payments.dtos';
 
 export const PaymentsSchema = new Schema<IPayments & Document>({
   schedule_id: { type: String, required: true },
+  paymentIntentId: { type: String, required: false },
   price: { type: Number, required: true },
   status: { type: String, default: 'pendente', required: true },
   date_creation: { type: Date, default: Date.now, required: true },
